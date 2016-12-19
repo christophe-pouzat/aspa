@@ -21,3 +21,64 @@ zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
 locust20010214/locust20010214_spike_trains/\
 locust20010214_Spontaneous_1_tetB_u1.txt
 ~~~
+
+This "spike train" contains in fact the result of 30 consecutive continuous acquisitions, each 29 s long with a 1 s gap in between, as is made clear in the [detailed sorting description](https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/Locust_Analysis_with_R/locust20010214/Sorting_20010214_tetB.html) of this data set.
+
+## Making the "observed counting process" plot
+
+We first get a gnuplot script, `aspa_ocp.gp`, from the github repository:
+
+~~~{#download-aspa_ocp.gp .bash}
+wget https://raw.githubusercontent.com/christophe-pouzat/\
+aspa/master/gnuplot/aspa_ocp.gp
+~~~
+
+We then get a graph showing the observed counting process associated with the train by typing in the shell:
+
+~~~{#locust20010214_Spontaneous_1_tetB_u1 .bash}
+cat aspa_ocp.gp locust20010214_Spontaneous_1_tetB_u1.txt | \
+gnuplot -persist
+~~~
+
+![The observed counting process associted with `locust20010214_Spontaneous_1_tetB_u1.txt` spike train](locust20010214_Spontaneous_1_tetB_u1_ocp.png){ width=70% }
+
+Notice the two "long" horizontal sections, thess are due to the presence of recording noise during trials 11 and 21 (these trials were skipped during spike sorting).
+
+# `C` code
+
+The "heavy duty" work will be done by `C` codes. In addition to a `C` compiler like [gcc](https://gcc.gnu.org/), you will need the [GSL](https://www.gnu.org/software/gsl/) (Gnu Scientific Library) to compile the codes.
+
+## First test
+
+To test that everything is properly set, we start by downloading the `Makefile`
+
+~~~{#download-Makefile .bash}
+wget https://raw.githubusercontent.com/christophe-pouzat/\
+aspa/master/code/Makefile
+~~~
+
+as well as the header file `aspa.h` and the two `C` source files, `aspa_single.c` and `aspa_single_test.c`:
+
+~~~{#download-c-source .bash}
+wget https://raw.githubusercontent.com/christophe-pouzat/\
+aspa/master/code/aspa.h
+wget https://raw.githubusercontent.com/christophe-pouzat/\
+aspa/master/code/aspa_single.c
+wget https://raw.githubusercontent.com/christophe-pouzat/\
+aspa/master/code/aspa_single_test.c
+~~~
+
+We can then compile the test file (`aspa_single_test.c`) with:
+
+~~~{#compile-aspa_single_test .bash}
+make aspa_single_test
+~~~
+
+And we run it on the spike train we downloaded previously with:
+
+~~~{#run-aspa_single_test .bash}
+cat locust20010214_Spontaneous_1_tetB_u1.txt | \
+aspa_single_test
+~~~
+
+We should see the number of spikes (3331), the time of the first spike (0.290975 s) and the time of the last one (898.15 s) printed.
