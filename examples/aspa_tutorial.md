@@ -15,7 +15,7 @@ We are going to use spike trains obtained from the antennal lobe--first olfactor
 
 We will start by downloading the spike train from unit 1 from `group` `Spontaneous_1`. This is done by typing in the shell:
 
-~~~{#download-data .bash}
+~~~{#download-locust20010214_Spontaneous_1_tetB_u1 .bash}
 wget https://raw.githubusercontent.com/christophe-pouzat/\
 zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
 locust20010214/locust20010214_spike_trains/\
