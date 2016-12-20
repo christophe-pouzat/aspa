@@ -83,7 +83,7 @@ cat locust20010214_Spontaneous_1_tetB_u1.txt | \
 aspa_single_test
 ~~~
 
-We should see the number of spikes (3331), the time of the first spike (0.290975 s) and the time of the last one (898.15 s) printed.
+We should see the number of spikes (3331), the time of the first spike (0.290975 s), the time of the last one (898.15 s) printed followed by a bunch of statistics concerning the inter spike intervals (`isi`) distribution.
 
 Notice that I've assumed here that the current directory is on your executable path, if not you can either add to the path with:
 
@@ -105,4 +105,12 @@ One of the big advantages of `C` is that it let's you do efficient memory manage
 ~~~{#run-aspa_single_test-with-valgrind .bash}
 valgrind --leak-check=yes cat locust20010214_Spontaneous_1_tetB_u1.txt \
 | aspa_single_test
+~~~
+
+## Checking that there is no major mistake
+
+We can give a regular sequence (with one spike every second, using the `seq` function) and see what it gives with (the spike times are entered here in sample points assuming a sampling rate of 15 kHz and a recording duration of 60 seconds):
+
+~~~{#run-aspa_single_test-on-regular-sequence .bash}
+seq 1 15000 900000 | aspa_single_test
 ~~~

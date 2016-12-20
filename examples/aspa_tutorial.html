@@ -90,7 +90,7 @@ aspa/master/code/aspa_single_test.c</code></pre></div>
 <p>And we run it on the spike train we downloaded previously with:</p>
 <div class="sourceCode" id="run-aspa_single_test"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">cat</span> locust20010214_Spontaneous_1_tetB_u1.txt <span class="kw">|</span> <span class="kw">\</span>
 <span class="ex">aspa_single_test</span></code></pre></div>
-<p>We should see the number of spikes (3331), the time of the first spike (0.290975 s) and the time of the last one (898.15 s) printed.</p>
+<p>We should see the number of spikes (3331), the time of the first spike (0.290975 s), the time of the last one (898.15 s) printed followed by a bunch of statistics concerning the inter spike intervals (<code>isi</code>) distribution.</p>
 <p>Notice that I've assumed here that the current directory is on your executable path, if not you can either add to the path with:</p>
 <div class="sourceCode" id="add-current-directory-to-path"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="bu">export</span> <span class="va">PATH=</span>.:<span class="va">$PATH</span></code></pre></div>
 <p>or use:</p>
@@ -100,5 +100,8 @@ aspa/master/code/aspa_single_test.c</code></pre></div>
 <p>One of the big advantages of <code>C</code> is that it let's you do efficient memory management; but this advantage comes at a cost: you have to do the memory management yourself meaning among other things that you should free the memory you allocate. A nice tool for checking that a code does actually free everything it allocates is the <a href="http://valgrind.org/">Valgrind</a> program. Once we have installed it, we can use it with:</p>
 <div class="sourceCode" id="run-aspa_single_test-with-valgrind"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">valgrind</span> --leak-check=yes cat locust20010214_Spontaneous_1_tetB_u1.txt \
 <span class="kw">|</span> <span class="ex">aspa_single_test</span></code></pre></div>
+<h2 id="checking-that-there-is-no-major-mistake">Checking that there is no major mistake</h2>
+<p>We can give a regular sequence (with one spike every second, using the <code>seq</code> function) and see what it gives with (the spike times are entered here in sample points assuming a sampling rate of 15 kHz and a recording duration of 60 seconds):</p>
+<div class="sourceCode" id="run-aspa_single_test-on-regular-sequence"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">seq</span> 1 15000 900000 <span class="kw">|</span> <span class="ex">aspa_single_test</span></code></pre></div>
 </body>
 </html>
