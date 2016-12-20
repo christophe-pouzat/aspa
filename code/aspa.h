@@ -14,3 +14,5 @@
 #include <gsl/gsl_heapsort.h>
 
 gsl_vector * read_spike_train(FILE * STREAM, double sampling_frequency);
+
+gsl_vector * get_isi(gsl_vector *st, double inter_trial_interval, size_t *n_trials);
