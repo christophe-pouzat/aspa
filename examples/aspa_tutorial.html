@@ -50,6 +50,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h1 class="title"><em>Analyse des séquences de potentiels d'action</em> tutorial</h1>
 <h2 class="author">Christophe Pouzat</h2>
 </div>
+<h1 id="required-software">Required software</h1>
+<p>The code will be written mostly in <code>C</code>. If you want a clear and quick introduction to this language, check Ben Klemens: <a href="http://modelingwithdata.org/about_the_book.html">Modeling With Data</a>. To compile the code you will need a <code>C</code> compiler like <a href="https://gcc.gnu.org/">gcc</a>. If you are using <code>Linux</code> or <code>MacOS</code> it's in a package from your favorite distribution, if you are using <code>Windows</code> you will have to install <a href="https://cygwin.com/index.html">Cygwin</a>. The heavy computational work is going to be performed mainly by the <a href="http://www.gnu.org/software/gsl/">gsl</a> (the <em>GNU Scientific Library</em>) that is easily installed through your package manager (from now on, for windows users, the &quot;package manager&quot; refers to the one of <code>Cygwin</code>). The graphs will be generated with <a href="http://www.gnuplot.info/">gnuplot</a>.</p>
 <h1 id="data-used">Data used</h1>
 <p>We are going to use spike trains obtained from the antennal lobe--first olfactory relay--of locust, <em>Schistocerca americana</em>. These spike trains can be found on the <a href="https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/">zenodo-locust-datasets-analysis</a> GitHub repository. You can also find there a complete description of the sorting procedure used to go from the raw data, that are available on <a href="https://zenodo.org/record/21589">zenodo</a>, to the spike trains. We will mostly use the spike trains from experiment <code>locust20010214</code> that can be found at the following address: <a href="https://github.com/christophe-pouzat/zenodo-locust-datasets-analysis/tree/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains" class="uri">https://github.com/christophe-pouzat/zenodo-locust-datasets-analysis/tree/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains</a>.</p>
 <h2 id="getting-a-spike-train">Getting a spike train</h2>
@@ -72,7 +74,6 @@ aspa/master/gnuplot/aspa_ocp.gp</code></pre></div>
 </div>
 <p>Notice the two &quot;long&quot; horizontal sections, thess are due to the presence of recording noise during trials 11 and 21 (these trials were skipped during spike sorting).</p>
 <h1 id="c-code"><code>C</code> code</h1>
-<p>The &quot;heavy duty&quot; work will be done by <code>C</code> codes. In addition to a <code>C</code> compiler like <a href="https://gcc.gnu.org/">gcc</a>, you will need the <a href="https://www.gnu.org/software/gsl/">GSL</a> (Gnu Scientific Library) to compile the codes.</p>
 <h2 id="first-test">First test</h2>
 <p>To test that everything is properly set, we start by downloading the <code>Makefile</code></p>
 <div class="sourceCode" id="download-Makefile"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">wget</span> https://raw.githubusercontent.com/christophe-pouzat/\
@@ -90,5 +91,14 @@ aspa/master/code/aspa_single_test.c</code></pre></div>
 <div class="sourceCode" id="run-aspa_single_test"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">cat</span> locust20010214_Spontaneous_1_tetB_u1.txt <span class="kw">|</span> <span class="kw">\</span>
 <span class="ex">aspa_single_test</span></code></pre></div>
 <p>We should see the number of spikes (3331), the time of the first spike (0.290975 s) and the time of the last one (898.15 s) printed.</p>
+<p>Notice that I've assumed here that the current directory is on your executable path, if not you can either add to the path with:</p>
+<div class="sourceCode" id="add-current-directory-to-path"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="bu">export</span> <span class="va">PATH=</span>.:<span class="va">$PATH</span></code></pre></div>
+<p>or use:</p>
+<div class="sourceCode" id="run-aspa_single_test2"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">cat</span> locust20010214_Spontaneous_1_tetB_u1.txt <span class="kw">|</span> <span class="kw">\</span>
+<span class="ex">./aspa_single_test</span></code></pre></div>
+<h2 id="checking-memory-leaks">Checking memory leaks</h2>
+<p>One of the big advantages of <code>C</code> is that it let's you do efficient memory management; but this advantage comes at a cost: you have to do the memory management yourself meaning among other things that you should free the memory you allocate. A nice tool for checking that a code does actually free everything it allocates is the <a href="http://valgrind.org/">Valgrind</a> program. Once we have installed it, we can use it with:</p>
+<div class="sourceCode" id="run-aspa_single_test-with-valgrind"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">valgrind</span> --leak-check=yes cat locust20010214_Spontaneous_1_tetB_u1.txt \
+<span class="kw">|</span> <span class="ex">aspa_single_test</span></code></pre></div>
 </body>
 </html>
