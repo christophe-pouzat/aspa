@@ -3,10 +3,10 @@
 int main()
 {
   // Get spike train
-  gsl_vector * st=read_spike_train(stdin,15000);
-  printf("# The spike train contains %d spikes.\n",(int) st->size);
-  printf("# The first spike time is: %g (s),\n",gsl_vector_get(st,0));
-  printf("# The last spike time is: %g (s).\n",gsl_vector_get(st,st->size-1));
+  aspa_spike_train_data * st=aspa_get_spike_train_data(15000,30);
+  printf("# The spike train contains %d spikes.\n",(int) st->n_spikes);
+  printf("# The first spike time is: %g (s),\n",st->spike_train[0]);
+  printf("# The last spike time is: %g (s).\n",st->spike_train[st->n_spikes-1]);
   /* // Get isi and number of trials */
   /* size_t n_t; */
   /* gsl_matrix *isir=get_isi_rank(st,30,&n_t); */
@@ -14,7 +14,7 @@ int main()
   /* double isi[isir->size2]; */
   /* for (size_t i=0; i<isir->size2; i++) */
   /*   isi[i] = gsl_matrix_get(isir,1,i); */
-  aspa_isi_data * isid=aspa_get_isi_data(st,30);
+  aspa_isi_data * isid=aspa_get_isi_data(st);
   printf("# There are %d trials.\n",(int) isid->n_trials);
   printf("# The shortest isi is: %g (s),\n",gsl_stats_min(isid->isi,1,isid->n_isi));
   printf("# The largest isi is: %g (s),\n",gsl_stats_max(isid->isi,1,isid->n_isi));
@@ -27,6 +27,7 @@ int main()
   printf("# The lag 1 rank autocorrelation (+/- se) of the isi is: %g +/- %g.\n",
   	 gsl_stats_lag1_autocorrelation(rank,1,isid->n_isi),
   	 0.6325/sqrt((double) isid->n_isi-1.0));
+  aspa_spike_train_data_free(st);
   /* printf("# The shortest isi is: %g (s),\n",gsl_stats_min(isi,1,isir->size2)); */
   /* printf("# The largest isi is: %g (s),\n",gsl_stats_max(isi,1,isir->size2)); */
   /* printf("# The mean isi is: %g (s) and its SD is %g (s).\n", */

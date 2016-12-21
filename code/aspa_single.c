@@ -1,6 +1,62 @@
 #include "aspa.h"
 #define default_length 1000
 
+/** @brief Reads data from stdin, allocates and intializes an
+ *         aspa_spike_train_data structure
+ *
+ *  The data entered in stdin are assumed to be organized
+ *  in a single column (one spike time per line).
+ *
+ *  @param[in] sampling_frequency as its name says (in Hz)
+ *  @param[in] inter_trial_interval as its name says (in s)
+ *  @returns a pointer to an initialized aspa_spike_train_data
+*/
+aspa_spike_train_data * aspa_get_spike_train_data(double sampling_frequency,
+						  double inter_trial_interval)
+{
+  size_t buffer_length = default_length;
+  double *buffer=calloc(buffer_length, sizeof(double));
+  size_t counter=0;
+  char line[BUFSIZ];
+  while (fgets (line, BUFSIZ, stdin))
+  {
+    buffer[counter] = atof(line)/sampling_frequency;
+    counter++;
+    if (counter>=buffer_length)
+    {
+      buffer_length*=2;
+      buffer=realloc(buffer,buffer_length*sizeof(double));
+    }
+  }
+  if (!feof(stdin))
+  {
+    fprintf (stderr, "Reading problem\n");
+    exit (EXIT_FAILURE);
+  }
+  aspa_spike_train_data * res = malloc(sizeof(aspa_spike_train_data));
+  res->sampling_frequency = sampling_frequency;
+  res->inter_trial_interval = inter_trial_interval;
+  res->n_spikes = counter;
+  res->aggregate = 0;
+  res->spike_train = malloc(counter*sizeof(double));
+  for (size_t i=0; i<counter; i++)
+    res->spike_train[i]=buffer[i];
+  free(buffer);
+  return res;
+}
+
+/** @brief Frees memory of aspa_spike_train_data structure
+ * 
+ *  @param st The aspa_spike_train_data to free
+ *  @return 0 if everyhing goes fine.
+*/
+int aspa_spike_train_data_free(aspa_spike_train_data * st)
+{
+  free(st->spike_train);
+  free(st);
+  return 0;
+}
+
 /** @brief Reads data from STREAM and allocates a gsl_vector
  *
  *  The data pointed to by STREAM are assumed to be organized
@@ -8,7 +64,7 @@
  *
  *  @param[in/out] STREAM pointer to an opened file or stdin
  *  @param[in] sampling_frequency as its name says (in Hz)
- *  @returns a pointer ot an initialized gsl_vector
+ *  @returns a pointer to an initialized gsl_vector
 */
 gsl_vector * read_spike_train(FILE * STREAM, double sampling_frequency)
 {
@@ -186,24 +242,24 @@ gsl_matrix * get_isi_rank(gsl_vector *st, double inter_trial_interval, size_t *n
  *  case the last spike of trial i and the first of trial i+1 should not
  *  be used to construct an isi.
  *
- *  @param[in] st a pointer to a gsl_vector containing the spike train
- *  @param[in] inter_trial_interval the elapsed time between trials
+ *  @param[in] st a pointer to a aspa_spike_train_data containing the spike train
  *  @return A pointer to an allocated and initialized aspa_isi_data structure 
 */
-aspa_isi_data * aspa_get_isi_data(gsl_vector *st, double inter_trial_interval)
+aspa_isi_data * aspa_get_isi_data(aspa_spike_train_data *st)
 {
-  size_t n_spikes=st->size; // Number of spikes in spike train
+  size_t n_spikes=st->n_spikes; // Number of spikes in spike train
+  double inter_trial_interval=st->inter_trial_interval;
   size_t trial[n_spikes]; // Trial
   double isi[n_spikes]; // Array containing isi
   double left[n_spikes]; // Array containing spike time of the "left" spike of an isi
   size_t n_trials=0; // The number of trials
-  double last_st = gsl_vector_get(st,0); // Time of last spike
+  double last_st = st->spike_train[0]; // Time of last spike
   size_t trial_idx=floor(last_st/inter_trial_interval); // In which trial is the current spike
   n_trials++; 
   size_t n_isi=0; // The number of isi
   for (size_t i=1; i<n_spikes; i++)
   {
-    double current_st = gsl_vector_get(st,i); // Time of spike i
+    double current_st = st->spike_train[i]; // Time of spike i
     size_t current_idx = floor(current_st/inter_trial_interval);
     if (current_idx > trial_idx)
     { // If the trial of spike i is not the one of the previous spike

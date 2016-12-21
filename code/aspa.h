@@ -16,6 +16,27 @@
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_permutation.h>
 
+/** @brief Structure holding spike trains related data.
+ *
+ *  Since we work most of the time in a multi-trial setting,
+ *  the structure is designed to hold all the information
+ *  allowing to go back and forth between actual spike time
+ *  (the data stored in member spike_train) and within trial
+ *  time.
+*/
+typedef struct
+{
+  size_t n_spikes; //<! Number of spikes
+  double sampling_frequency; //<! The sampling frequency (Hz)
+  double inter_trial_interval; //<! The inter trial interval (s)
+  double * spike_train; //<! The spike train
+  size_t aggregate; //<! Aggregation indicator (0 is no aggregation, number of aggregated trials otherwise)
+} aspa_spike_train_data;
+
+aspa_spike_train_data * aspa_get_spike_train_data(double sampling_frequency, double inter_trial_interval);
+
+int aspa_spike_train_data_free(aspa_spike_train_data * st);
+  
 /** @brief Structure holding inter spike interval (isi)
  *         related data
  *
@@ -47,4 +68,4 @@ gsl_vector * get_isi(gsl_vector *st, double inter_trial_interval, size_t *n_tria
 
 gsl_matrix * get_isi_rank(gsl_vector *st, double inter_trial_interval, size_t *n_trials);
 
-aspa_isi_data * aspa_get_isi_data(gsl_vector *st, double inter_trial_interval);
+aspa_isi_data * aspa_get_isi_data(aspa_spike_train_data *st);
