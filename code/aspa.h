@@ -27,7 +27,6 @@
 typedef struct
 {
   size_t n_spikes; //<! Number of spikes
-  double sampling_frequency; //<! The sampling frequency (Hz)
   double inter_trial_interval; //<! The inter trial interval (s)
   double * spike_train; //<! The spike train
   size_t aggregate; //<! Aggregation indicator (0 is no aggregation, number of aggregated trials otherwise)

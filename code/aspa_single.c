@@ -34,7 +34,6 @@ aspa_spike_train_data * aspa_get_spike_train_data(double sampling_frequency,
     exit (EXIT_FAILURE);
   }
   aspa_spike_train_data * res = malloc(sizeof(aspa_spike_train_data));
-  res->sampling_frequency = sampling_frequency;
   res->inter_trial_interval = inter_trial_interval;
   res->n_spikes = counter;
   res->aggregate = 0;
