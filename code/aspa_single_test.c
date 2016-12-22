@@ -27,26 +27,12 @@ int main()
   printf("# The lag 1 rank autocorrelation (+/- se) of the isi is: %g +/- %g.\n",
   	 gsl_stats_lag1_autocorrelation(rank,1,isid->n_isi),
   	 0.6325/sqrt((double) isid->n_isi-1.0));
+  aspa_spike_train_data * ast=aspa_aggregate_spike_train(st);
   aspa_spike_train_data_free(st);
-  /* printf("# The shortest isi is: %g (s),\n",gsl_stats_min(isi,1,isir->size2)); */
-  /* printf("# The largest isi is: %g (s),\n",gsl_stats_max(isi,1,isir->size2)); */
-  /* printf("# The mean isi is: %g (s) and its SD is %g (s).\n", */
-  /* 	 gsl_stats_mean(isi,1,isir->size2), */
-  /* 	 gsl_stats_sd(isi,1,isir->size2)); */
-  /* // Get lag 1 autocorrelation of the ranks */
-  /* double rank[isir->size2]; */
-  /* for (size_t i=0; i<isir->size2; i++) */
-  /*   rank[i] = gsl_matrix_get(isir,2,i); */
-  /* printf("# The lag 1 rank autocorrelation (+/- se) of the isi is: %g +/- %g.\n", */
-  /* 	 gsl_stats_lag1_autocorrelation(rank,1,isir->size2), */
-  /* 	 0.6325/sqrt((double) isir->size2-1.0)); */
-  /* gsl_vector_free(st); */
-  /* printf("#\n"); */
-  /* for (size_t i=0; i<isir->size2; i++) */
-  /*   printf("%g %g %g\n",gsl_matrix_get(isir,0,i), */
-  /* 	   gsl_matrix_get(isir,1,i), */
-  /* 	   gsl_matrix_get(isir,2,i)); */
-  /* gsl_matrix_free(isir); */
+  printf("#\n");
+  for (size_t i=0; i<ast->n_spikes; i++)
+    printf("%g %d\n",ast->spike_train[i],(int) i);
+  aspa_spike_train_data_free(ast);
   aspa_isi_data_free(isid);
   return 0;
 }

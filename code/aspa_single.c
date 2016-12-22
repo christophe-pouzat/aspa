@@ -56,6 +56,43 @@ int aspa_spike_train_data_free(aspa_spike_train_data * st)
   return 0;
 }
 
+/** @brief Aggregates many trials of a spike train
+ *
+ *  @param[in] st The aspa_spike_train_data to aggregate
+ *  @return a new "aggregated" aspa_spike_train_data if everyhing goes fine.
+*/
+aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data * st)
+{
+  aspa_spike_train_data * res = malloc(sizeof(aspa_spike_train_data));
+  size_t n_spikes=st->n_spikes; // Number of spikes in spike train
+  res->n_spikes = n_spikes;
+  double iti = st->inter_trial_interval;
+  res->inter_trial_interval = iti;
+  res->spike_train = malloc(n_spikes*sizeof(double));
+  size_t n_trials=0; // The number of trials
+  double last_st = st->spike_train[0]; // Time of last spike
+  size_t trial_idx=floor(last_st/iti); // In which trial is the current spike
+  res->spike_train[0] = st->spike_train[0]-iti*trial_idx;
+  n_trials++; 
+  for (size_t i=1; i<n_spikes; i++)
+  {
+    double current_st = st->spike_train[i]; // Time of spike i
+    size_t current_idx = floor(current_st/iti);
+    if (current_idx > trial_idx)
+    { // If the trial of spike i is not the one of the previous spike
+      // We change trial_idx
+      trial_idx = current_idx;
+      // We increase the number of "observed" trials
+      n_trials++;
+    }
+    res->spike_train[i] = current_st-iti*trial_idx;
+    last_st=current_st;
+  }
+  res->aggregate = n_trials;
+  gsl_sort(res->spike_train,1,n_spikes);
+  return res;
+}
+
 /** @brief Reads data from STREAM and allocates a gsl_vector
  *
  *  The data pointed to by STREAM are assumed to be organized

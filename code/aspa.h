@@ -35,7 +35,9 @@ typedef struct
 aspa_spike_train_data * aspa_get_spike_train_data(double sampling_frequency, double inter_trial_interval);
 
 int aspa_spike_train_data_free(aspa_spike_train_data * st);
-  
+
+aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data * st);
+
 /** @brief Structure holding inter spike interval (isi)
  *         related data
  *
