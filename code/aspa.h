@@ -36,7 +36,23 @@ aspa_spike_train_data * aspa_get_spike_train_data(double sampling_frequency, dou
 
 int aspa_spike_train_data_free(aspa_spike_train_data * st);
 
-aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data * st);
+/** @brief Structure holding arrays of aspa_spike_train_data.
+ *
+ *  Since we work most of the time in a multi-trial setting,
+ *  the structure is designed to hold arrays of aspa_spike_train_data.
+*/
+typedef struct
+{
+  size_t n_trials; //<! Number of trials
+  double * trial_start_time; //<! Vector holding the actual start time of each trial
+  aspa_spike_train_data ** spike_train_data; //<! The spike train data
+} aspa_spike_train_data_array;
+
+aspa_spike_train_data_array * aspa_get_spike_train_data_array(aspa_spike_train_data * std);
+
+int aspa_spike_train_data_array_free(aspa_spike_train_data_array * sta);
+
+aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data_array * sta);
 
 /** @brief Structure holding inter spike interval (isi)
  *         related data

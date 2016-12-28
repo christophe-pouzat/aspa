@@ -56,38 +56,122 @@ int aspa_spike_train_data_free(aspa_spike_train_data * st)
   return 0;
 }
 
-/** @brief Aggregates many trials of a spike train
+/** @brief Creates an aspa_spike_train_data_array from an aspa_spike_train_data
  *
- *  @param[in] st The aspa_spike_train_data to aggregate
- *  @return a new "aggregated" aspa_spike_train_data if everyhing goes fine.
+ *  The function splits the times of the spike_train member of its input into
+ *  as many aspa_spike_train_data as there are trials where each new aspa_spike_train_data
+ *  contains the offset data from a single trial
+ *
+ *  @param[in] st a pointer to an aspa_spike_train_data structure
+ *  @returns a pointer to an initialized aspa_spike_train_data_array
 */
-aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data * st)
+aspa_spike_train_data_array * aspa_get_spike_train_data_array(aspa_spike_train_data * st)
 {
-  aspa_spike_train_data * res = malloc(sizeof(aspa_spike_train_data));
+  aspa_spike_train_data_array * res = malloc(sizeof(aspa_spike_train_data_array));
   size_t n_spikes=st->n_spikes; // Number of spikes in spike train
-  res->n_spikes = n_spikes;
   double iti = st->inter_trial_interval;
-  res->inter_trial_interval = iti;
-  res->spike_train = malloc(n_spikes*sizeof(double));
-  size_t n_trials=0; // The number of trials
+  // Find ot the number of trials
   double last_st = st->spike_train[0]; // Time of last spike
   size_t trial_idx=floor(last_st/iti); // In which trial is the current spike
-  res->spike_train[0] = st->spike_train[0]-iti*trial_idx;
-  n_trials++; 
+  size_t n_trials=1; // The number of trials
   for (size_t i=1; i<n_spikes; i++)
   {
     double current_st = st->spike_train[i]; // Time of spike i
     size_t current_idx = floor(current_st/iti);
     if (current_idx > trial_idx)
-    { // If the trial of spike i is not the one of the previous spike
-      // We change trial_idx
-      trial_idx = current_idx;
-      // We increase the number of "observed" trials
       n_trials++;
-    }
-    res->spike_train[i] = current_st-iti*trial_idx;
-    last_st=current_st;
   }
+  res->n_trials = n_trials;
+  res->trial_start_time = malloc(n_trials*sizeof(double));
+  res->spike_train_data = malloc(n_trials*sizeof(aspa_spike_train_data *));
+  double current_train[n_spikes];
+  size_t s_idx=0;
+  for (size_t t_idx=0; t_idx<n_trials; t_idx++)
+  {
+    double current_st = st->spike_train[s_idx];
+    size_t current_idx = floor(current_st/iti);
+    res->trial_start_time[t_idx] = current_idx*iti;
+    size_t within_index=0;
+    while (floor(current_st/iti) == current_idx && s_idx<n_spikes)
+    {
+      current_train[within_index] = current_st-current_idx*iti;
+      within_index++;
+      s_idx++;
+      current_st = st->spike_train[s_idx];
+    }
+    res->spike_train_data[t_idx] = malloc(sizeof(aspa_spike_train_data));
+    res->spike_train_data[t_idx]->n_spikes=within_index;
+    res->spike_train_data[t_idx]->inter_trial_interval=iti;
+    res->spike_train_data[t_idx]->spike_train=malloc(within_index*sizeof(double));
+    res->spike_train_data[t_idx]->aggregate=0;
+    for (size_t i=0; i<within_index; i++)
+      res->spike_train_data[t_idx]->spike_train[i] = current_train[i];
+  }
+  return res;
+}
+
+/** @brief Frees memory of aspa_spike_train_data_array structure
+ * 
+ *  @param sta The aspa_spike_train_data_array to free
+ *  @return 0 if everyhing goes fine.
+*/
+int aspa_spike_train_data_array_free(aspa_spike_train_data_array * sta)
+{
+  free(sta->trial_start_time);
+  for (size_t i=0; i<sta->n_trials; i++)
+    free(sta->spike_train_data[i]);
+  free(sta->spike_train_data);
+  free(sta);
+  return 0;
+}
+
+/** @brief Aggregates many trials of a spike train
+ *
+ *  @param[in] st The aspa_spike_train_data to aggregate
+ *  @return a new "aggregated" aspa_spike_train_data if everyhing goes fine.
+*/
+//aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data * st)
+aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data_array * sta)
+{
+  aspa_spike_train_data * res = malloc(sizeof(aspa_spike_train_data));
+  size_t n_trials = sta->n_trials;
+  size_t n_spikes=0; // Number of spikes in spike train
+  for (size_t i=0; i<n_trials; i++)
+    n_spikes+=(sta->spike_train_data[i])->n_spikes;
+  //size_t n_spikes=st->n_spikes; // Number of spikes in spike train
+  res->n_spikes = n_spikes;
+  //double iti = st->inter_trial_interval;
+  double iti = (sta->spike_train_data[0])->inter_trial_interval;
+  res->inter_trial_interval = iti;
+  res->spike_train = malloc(n_spikes*sizeof(double));
+  size_t s_idx=0;
+  for (size_t i=0; i<n_trials; i++)
+  {
+    for (size_t j=0; j<(sta->spike_train_data[i])->n_spikes; j++)
+    {
+      res->spike_train[s_idx] = (sta->spike_train_data[i])->spike_train[j];
+      s_idx++;
+    }
+  }
+  //size_t n_trials=0; // The number of trials
+  //double last_st = st->spike_train[0]; // Time of last spike
+  //size_t trial_idx=floor(last_st/iti); // In which trial is the current spike
+  //res->spike_train[0] = st->spike_train[0]-iti*trial_idx;
+  //n_trials++; 
+  //for (size_t i=1; i<n_spikes; i++)
+  //{
+  //  double current_st = st->spike_train[i]; // Time of spike i
+  //  size_t current_idx = floor(current_st/iti);
+  //  if (current_idx > trial_idx)
+  //  { // If the trial of spike i is not the one of the previous spike
+  //    // We change trial_idx
+  //    trial_idx = current_idx;
+  //    // We increase the number of "observed" trials
+  //    n_trials++;
+  //  }
+  //  res->spike_train[i] = current_st-iti*trial_idx;
+  //  last_st=current_st;
+  //}
   res->aggregate = n_trials;
   gsl_sort(res->spike_train,1,n_spikes);
   return res;

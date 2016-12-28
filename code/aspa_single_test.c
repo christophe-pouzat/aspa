@@ -27,11 +27,13 @@ int main()
   printf("# The lag 1 rank autocorrelation (+/- se) of the isi is: %g +/- %g.\n",
   	 gsl_stats_lag1_autocorrelation(rank,1,isid->n_isi),
   	 0.6325/sqrt((double) isid->n_isi-1.0));
-  aspa_spike_train_data * ast=aspa_aggregate_spike_train(st);
+  aspa_spike_train_data_array * sta=aspa_get_spike_train_data_array(st);
   aspa_spike_train_data_free(st);
+  aspa_spike_train_data * ast=aspa_aggregate_spike_train(sta);
+  aspa_spike_train_data_array_free(sta);
   printf("#\n");
   for (size_t i=0; i<ast->n_spikes; i++)
-    printf("%g %d\n",ast->spike_train[i],(int) i);
+    printf("%g %d\n",ast->spike_train[i],(int) i+1);
   aspa_spike_train_data_free(ast);
   aspa_isi_data_free(isid);
   return 0;
