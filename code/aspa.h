@@ -30,23 +30,24 @@ gsl_vector * aspa_raw_fscanf(FILE * STREAM, double sampling_frequency);
 typedef struct
 {
   size_t n_trials; //<! Number of trials
-  double onset; //<! Stimulus onset time
-  double offset; //<! Stimulus offset time
+  double onset; //<! Stimulus onset time (s)
+  double offset; //<! Stimulus offset time (s)
+  double trial_duration; //<! Single trial duration (s)
   double * trial_start_time; //<! Vector holding the actual start time of each trial
   gsl_vector ** st; //<! The spike trains
 } aspa_sta;
 
-aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset);
+aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset, double trial_duration);
 
 int aspa_sta_free(aspa_sta * sta);
 
-gsl_vector * aspa_sta_get_st(aspa_sta * sta, size_t st_index);
+gsl_vector * aspa_sta_get_st(const aspa_sta * sta, size_t st_index);
 
-double aspa_sta_get_st_start(aspa_sta * sta, size_t st_index);
+double aspa_sta_get_st_start(const aspa_sta * sta, size_t st_index);
 
 int aspa_sta_set_st_start(aspa_sta * sta, size_t st_index, double time);
 
-aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, double onset, double offset);
+aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, double onset, double offset, double trial_duration);
 
 int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat);
 

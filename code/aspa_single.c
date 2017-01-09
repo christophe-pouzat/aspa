@@ -52,12 +52,13 @@ gsl_vector * aspa_raw_fscanf(FILE * STREAM,
  *  @param[in] offset stimulus offset time (in s)
  *  @returns a pointer to an allocated aspa_sta
 */
-aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset)
+aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset, double trial_duration)
 {
   aspa_sta * res = malloc(sizeof(aspa_sta));
   res->n_trials = n_trials;
   res->onset = onset;
   res->offset = offset;
+  res->trial_duration = trial_duration;
   res->trial_start_time = malloc(n_trials*sizeof(double));
   res->st = malloc(n_trials*sizeof(gsl_vector *));
   return res;
@@ -87,7 +88,7 @@ int aspa_sta_free(aspa_sta * sta)
  *  @param[in] st_index the index of the requested spike train
  *  returns a pointer to a gsl_vector
 */
-gsl_vector * aspa_sta_get_st(aspa_sta * sta, size_t st_index)
+gsl_vector * aspa_sta_get_st(const aspa_sta * sta, size_t st_index)
 {
   assert (st_index < sta->n_trials);
   return sta->st[st_index];
@@ -103,7 +104,7 @@ gsl_vector * aspa_sta_get_st(aspa_sta * sta, size_t st_index)
  *  @param[in] st_index the index of the requested spike train
  *  returns the trial start time
 */
-double aspa_sta_get_st_start(aspa_sta * sta, size_t st_index)
+double aspa_sta_get_st_start(const aspa_sta * sta, size_t st_index)
 {
   assert (st_index < sta->n_trials);
   return sta->trial_start_time[st_index];
@@ -143,7 +144,7 @@ int aspa_sta_set_st_start(aspa_sta * sta, size_t st_index, double time)
  *  @param[in] offset stimulus offset time (in s)
  *  @returns a pointer to an initialized aspa_sta
 */
-aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, double onset, double offset)
+aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, double onset, double offset, double trial_duration)
 {
   size_t n_spikes=raw->size; // Number of spikes in raw
   double iti = inter_trial_interval;
@@ -158,7 +159,7 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
     if (current_idx > trial_idx)
       n_trials++;
   }
-  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset);
+  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset, trial_duration);
   double current_train[n_spikes];
   size_t s_idx=0;
   for (size_t t_idx=0; t_idx<n_trials; t_idx++)
@@ -184,16 +185,17 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
 
 int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
 {
-  if (flat == FALSE) {
+  if (flat == false) {
     fprintf(stream,"# Number of trials: %d\n",(int) sta->n_trials);
     fprintf(stream,"# Stimulus onset: %g (s)\n",sta->onset);
     fprintf(stream,"# Stimulus offset: %g (s)\n",sta->offset);
-    fprintf(stream,"\n");
+    fprintf(stream,"# Single trial duration: %g (s)\n",sta->trial_duration);
+    fprintf(stream,"\n\n");
   }
-  for (t_idx=0; t_idx < sta->n_trials; t_idx++)
+  for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
   {
     gsl_vector * st = aspa_sta_get_st(sta,t_idx);
-    if (flat == FALSE) {
+    if (flat == false) {
       fprintf(stream,"# Start of trial: %d\n",(int) t_idx);
       fprintf(stream,"# Trial start time: %g (s)\n", aspa_sta_get_st_start(sta,t_idx));
       fprintf(stream,"# Number of spikes: %d\n",(int) st->size);
