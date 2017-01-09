@@ -7,7 +7,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <math.h>
+#include <assert.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
@@ -15,6 +17,38 @@
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_permutation.h>
+
+gsl_vector * aspa_raw_fscanf(FILE * STREAM, double sampling_frequency);
+
+/** @brief Structure holding arrays of gsl_vectors each vector containing
+ *         a single trial spike train.
+ *
+ *  Since we work most of the time in a multi-trial setting,
+ *  the structure is designed to hold arrays of gsl_vectors.
+ *  sta stands for: spike train array.
+*/
+typedef struct
+{
+  size_t n_trials; //<! Number of trials
+  double onset; //<! Stimulus onset time
+  double offset; //<! Stimulus offset time
+  double * trial_start_time; //<! Vector holding the actual start time of each trial
+  gsl_vector ** st; //<! The spike trains
+} aspa_sta;
+
+aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset);
+
+int aspa_sta_free(aspa_sta * sta);
+
+gsl_vector * aspa_sta_get_st(aspa_sta * sta, size_t st_index);
+
+double aspa_sta_get_st_start(aspa_sta * sta, size_t st_index);
+
+int aspa_sta_set_st_start(aspa_sta * sta, size_t st_index, double time);
+
+aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, double onset, double offset);
+
+int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat);
 
 /** @brief Structure holding spike trains related data.
  *

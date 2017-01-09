@@ -1,6 +1,215 @@
 #include "aspa.h"
 #define default_length 1000
 
+/** @brief Reads data from stdin, allocates and intializes a
+ *         gsl_vector
+ *
+ *  The data entered in stdin are assumed to be organized
+ *  in a single column (one spike time per line).
+ *
+ *  @param[in] STREAM a pointer to an opened text file
+ *  @param[in] sampling_frequency as its name says (in Hz)
+ *  @returns a pointer to an initialized gsl_vector
+*/
+gsl_vector * aspa_raw_fscanf(FILE * STREAM,
+			     double sampling_frequency)
+{
+  size_t buffer_length = default_length;
+  double *buffer=calloc(buffer_length, sizeof(double));
+  size_t counter=0;
+  char line[BUFSIZ];
+  while (fgets (line, BUFSIZ, STREAM))
+  {
+    buffer[counter] = atof(line)/sampling_frequency;
+    counter++;
+    if (counter>=buffer_length)
+    {
+      buffer_length*=2;
+      buffer=realloc(buffer,buffer_length*sizeof(double));
+    }
+  }
+  if (!feof(STREAM))
+  {
+    fprintf (stderr, "Reading problem\n");
+    exit (EXIT_FAILURE);
+  }
+  gsl_vector * res = gsl_vector_alloc(counter);
+  for (size_t i=0; i<counter; i++)
+    gsl_vector_set(res,i,buffer[i]);
+  free(buffer);
+  return res;
+}
+
+/** @brief Allocates an aspa_sta
+ *
+ *  The function splits the times of its input into
+ *  as many gsl_vector as there are trials where each new gsl_vector 
+ *  contains the data from a single trial aligned on the stimulus 
+ *  onset time.
+ *
+ *  @param[in] n_trials, the number of trials 
+ *  @param[in] onset stimulus onset time (in s)
+ *  @param[in] offset stimulus offset time (in s)
+ *  @returns a pointer to an allocated aspa_sta
+*/
+aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset)
+{
+  aspa_sta * res = malloc(sizeof(aspa_sta));
+  res->n_trials = n_trials;
+  res->onset = onset;
+  res->offset = offset;
+  res->trial_start_time = malloc(n_trials*sizeof(double));
+  res->st = malloc(n_trials*sizeof(gsl_vector *));
+  return res;
+}
+
+/** @brief Frees an aspa_sta
+ *
+ *  @param[in/out] A pointer to an allocated aspa_sta structure
+ *  @returns 0 if everything goes fine 
+*/
+int aspa_sta_free(aspa_sta * sta)
+{
+  free(sta->trial_start_time);
+  for (size_t i=0; i < sta->n_trials; i++)
+    gsl_vector_free(sta->st[i]);
+  free(sta->st);
+  return 0;
+}
+
+/** @brief Returns a pointer to a given spike train of an 
+ *         aspa_sta structure.
+ *
+ *  Range checking is performed, if argument st_index is too 
+ *  large an error is generated.
+ *  
+ *  @param[in] sta A pointer to an allocated aspa_sta structure
+ *  @param[in] st_index the index of the requested spike train
+ *  returns a pointer to a gsl_vector
+*/
+gsl_vector * aspa_sta_get_st(aspa_sta * sta, size_t st_index)
+{
+  assert (st_index < sta->n_trials);
+  return sta->st[st_index];
+}
+
+/** @brief Returns "true" start time of a given spike train of an 
+ *         aspa_sta structure.
+ *
+ *  Range checking is performed, if argument st_index is too 
+ *  large an error is generated.
+ *  
+ *  @param[in] sta A pointer to an allocated aspa_sta structure
+ *  @param[in] st_index the index of the requested spike train
+ *  returns the trial start time
+*/
+double aspa_sta_get_st_start(aspa_sta * sta, size_t st_index)
+{
+  assert (st_index < sta->n_trials);
+  return sta->trial_start_time[st_index];
+}
+
+/** @brief Sets "true" start time of a given spike train of an 
+ *         aspa_sta structure.
+ *
+ *  Range checking is performed, if argument st_index is too 
+ *  large an error is generated.
+ *  
+ *  @param[in] sta A pointer to an allocated aspa_sta structure
+ *  @param[in] st_index the index of the requested trial
+ *  @param[in] time the onset of the trial
+ *  returns 0 if everything goes fine
+*/
+int aspa_sta_set_st_start(aspa_sta * sta, size_t st_index, double time)
+{
+  assert (st_index < sta->n_trials);
+  sta->trial_start_time[st_index]=time;
+  return 0;
+}
+
+/** @brief Allocates and initializes an aspa_sta structure from
+ *         a "flat" representation of the data
+ *
+ *  The first argument, raw, is assumed to contain the actual
+ *  spike times of all the trials one after the other.
+ *  The function splits the times of raw into
+ *  as many gsl_vector as there are trials where each new gsl_vector
+ *  contains the data from a single trial alligned on the stimulus 
+ *  onset time.
+ *
+ *  @param[in] raw pointer to a gsl_vector containing the "flat" data
+ *  @param[in] inter_trial_interval as its name says (in s)
+ *  @param[in] onset stimulus onset time (in s)
+ *  @param[in] offset stimulus offset time (in s)
+ *  @returns a pointer to an initialized aspa_sta
+*/
+aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, double onset, double offset)
+{
+  size_t n_spikes=raw->size; // Number of spikes in raw
+  double iti = inter_trial_interval;
+  // Find out the number of trials
+  double last_st = gsl_vector_get(raw,0); // Time of last spike
+  size_t trial_idx=floor(last_st/iti); // In which trial is the current spike
+  size_t n_trials=1; // The number of trials
+  for (size_t i=1; i<n_spikes; i++)
+  {
+    double current_st = gsl_vector_get(raw,i); // Time of spike i
+    size_t current_idx = floor(current_st/iti);
+    if (current_idx > trial_idx)
+      n_trials++;
+  }
+  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset);
+  double current_train[n_spikes];
+  size_t s_idx=0;
+  for (size_t t_idx=0; t_idx<n_trials; t_idx++)
+  {
+    double current_st = gsl_vector_get(raw,s_idx);
+    size_t current_idx = floor(current_st/iti);
+    aspa_sta_set_st_start(res,t_idx,current_idx*iti);
+    size_t within_index=0;
+    while (floor(current_st/iti) == current_idx && s_idx<n_spikes)
+    {
+      current_train[within_index] = current_st-current_idx*iti;
+      within_index++;
+      s_idx++;
+      current_st = gsl_vector_get(raw,s_idx);
+    }
+    res->st[t_idx] = gsl_vector_alloc(within_index);
+    gsl_vector * st = aspa_sta_get_st(res,t_idx);
+    for (size_t i=0; i<within_index; i++)
+      gsl_vector_set(st,i,current_train[i]);
+  }
+  return res;
+}
+
+int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
+{
+  if (flat == FALSE) {
+    fprintf(stream,"# Number of trials: %d\n",(int) sta->n_trials);
+    fprintf(stream,"# Stimulus onset: %g (s)\n",sta->onset);
+    fprintf(stream,"# Stimulus offset: %g (s)\n",sta->offset);
+    fprintf(stream,"\n");
+  }
+  for (t_idx=0; t_idx < sta->n_trials; t_idx++)
+  {
+    gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    if (flat == FALSE) {
+      fprintf(stream,"# Start of trial: %d\n",(int) t_idx);
+      fprintf(stream,"# Trial start time: %g (s)\n", aspa_sta_get_st_start(sta,t_idx));
+      fprintf(stream,"# Number of spikes: %d\n",(int) st->size);
+      for (size_t s_idx=0; s_idx < st->size; s_idx++)
+	fprintf(stream,"%g\n", gsl_vector_get(st,s_idx));
+      fprintf(stream,"# End of trial: %d\n",(int) t_idx);
+      fprintf(stream,"\n\n");
+    } else {
+      double t_start = aspa_sta_get_st_start(sta,t_idx);
+      for (size_t s_idx=0; s_idx < st->size; s_idx++)
+	fprintf(stream,"%g\n", gsl_vector_get(st,s_idx)+t_start);
+    }
+  }
+  return 0;
+}
+
 /** @brief Reads data from stdin, allocates and intializes an
  *         aspa_spike_train_data structure
  *
