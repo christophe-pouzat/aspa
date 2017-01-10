@@ -50,6 +50,7 @@ gsl_vector * aspa_raw_fscanf(FILE * STREAM,
  *  @param[in] n_trials, the number of trials 
  *  @param[in] onset stimulus onset time (in s)
  *  @param[in] offset stimulus offset time (in s)
+ *  @param[in] trial_duration as its name says (in s)
  *  @returns a pointer to an allocated aspa_sta
 */
 aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset, double trial_duration)
@@ -142,6 +143,7 @@ int aspa_sta_set_st_start(aspa_sta * sta, size_t st_index, double time)
  *  @param[in] inter_trial_interval as its name says (in s)
  *  @param[in] onset stimulus onset time (in s)
  *  @param[in] offset stimulus offset time (in s)
+ *  @param[in] trial_duration as its name says (in s)
  *  @returns a pointer to an initialized aspa_sta
 */
 aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, double onset, double offset, double trial_duration)
@@ -157,7 +159,10 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
     double current_st = gsl_vector_get(raw,i); // Time of spike i
     size_t current_idx = floor(current_st/iti);
     if (current_idx > trial_idx)
+    {
+      trial_idx = current_idx;
       n_trials++;
+    }
   }
   aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset, trial_duration);
   double current_train[n_spikes];
@@ -168,17 +173,21 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
     size_t current_idx = floor(current_st/iti);
     aspa_sta_set_st_start(res,t_idx,current_idx*iti);
     size_t within_index=0;
-    while (floor(current_st/iti) == current_idx && s_idx<n_spikes)
+    while (floor(current_st/iti) == current_idx)
     {
       current_train[within_index] = current_st-current_idx*iti;
       within_index++;
       s_idx++;
+      if (s_idx == n_spikes)
+	break;
       current_st = gsl_vector_get(raw,s_idx);
     }
     res->st[t_idx] = gsl_vector_alloc(within_index);
     gsl_vector * st = aspa_sta_get_st(res,t_idx);
     for (size_t i=0; i<within_index; i++)
       gsl_vector_set(st,i,current_train[i]);
+    if (s_idx == n_spikes)
+	break;
   }
   return res;
 }
