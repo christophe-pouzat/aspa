@@ -53,6 +53,10 @@ int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat);
 
 aspa_sta * aspa_sta_fscanf(FILE * STREAM);
 
+int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat);
+
+aspa_sta * aspa_sta_fread(FILE * STREAM);
+
 /** @brief Structure holding spike trains related data.
  *
  *  Since we work most of the time in a multi-trial setting,

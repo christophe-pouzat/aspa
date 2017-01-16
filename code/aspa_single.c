@@ -320,6 +320,101 @@ aspa_sta * aspa_sta_fscanf(FILE * STREAM)
   return res;
 }
 
+/** @brief Prints in binary to stream the content of an aspa_sta structure
+ *
+ *  What is printed is selected throught the boolean variable
+ *  flat. If the latter is set to true, the number of spikes is written first
+ *  as a size_t followed by the spike times 
+ *  one after the other--the times are the actual
+ *  ones, not the "within trial" times--. 
+ *  If flat is set to false, a size_t with the number of trials is written first
+ *  followed by the stimulus onset, offset and the single trial duration as doubles.
+ *  Then, for each trial, a trial start time (double), the number of spikes in the 
+ *  trial (size_t) followed by the within trials spike times.
+ *
+ *  @param[in/out] stream a pointer to an opened text file
+ *  @param[in] sta pointer to the aspa_sta structure to be written
+ *  @param[in] flat boolean indicator controlling what is written
+ *  @return 0 if successful  
+*/
+int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
+{
+  if (flat == true) {
+    // find out the total number of spikes
+    size_t n_total = 0;
+    for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+    {
+      gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+      n_total += st->size;
+    }
+    fwrite(&n_total,sizeof(size_t),1,stream);
+    for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+    {
+      gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+      double t_start = aspa_sta_get_st_start(sta,t_idx);
+      double spike_time;
+      for (size_t s_idx=0; s_idx < st->size; s_idx++)
+      {
+	spike_time = gsl_vector_get(st,s_idx)+t_start; 
+	fwrite(&spike_time,sizeof(double),1,stream);
+      }
+    }
+  } else {
+    fwrite(&(sta->n_trials),sizeof(size_t),1,stream);
+    fwrite(&(sta->onset),sizeof(double),1,stream);
+    fwrite(&(sta->offset),sizeof(double),1,stream);
+    fwrite(&(sta->trial_duration),sizeof(double),1,stream);
+  }
+  for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+  {
+    gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    double t_start = aspa_sta_get_st_start(sta,t_idx);
+    fwrite(&t_start,sizeof(double),1,stream);
+    fwrite(&(st->size),sizeof(size_t),1,stream);
+    gsl_vector_fwrite(stream,st);
+  }
+  return 0;
+}
+
+/** @brief Reads multiple trials from a binary file and return the
+ *         result in an allocated pointer to an aspa_sta structure
+ *
+ *  The expected format of the input is assumed to follow the following
+ *  layout: 
+ *  a size_t with the number of trials followed by the stimulus onset, 
+ *  offset and the single trial duration as doubles.
+ *  Then, for each trial, a trial start time (double), the number of spikes in the 
+ *  trial (size_t) followed by the within trials spike times.
+ *
+ *  @param[in/out] stream a pointer to an opened text file
+ *  @return a pointer to an allocated aspa_sta structure
+*/
+aspa_sta * aspa_sta_fread(FILE * STREAM)
+{
+  size_t n_trials;
+  fread(&n_trials, sizeof(size_t),1,STREAM);
+  double onset;
+  fread(&onset, sizeof(double),1,STREAM);
+  double offset;
+  fread(&offset, sizeof(double),1,STREAM);
+  double trial_duration;
+  fread(&trial_duration, sizeof(double),1,STREAM);
+  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset, trial_duration);
+  for (size_t t_idx=0; t_idx < n_trials; t_idx++)
+  {
+    double start_time;
+    fread(&start_time, sizeof(double),1,STREAM);
+    aspa_sta_set_st_start(res,t_idx,start_time);
+    size_t n_spikes;
+    fread(&n_spikes, sizeof(size_t),1,STREAM);
+    // Allocate spike times vector
+    res->st[t_idx] = gsl_vector_alloc(n_spikes);
+    gsl_vector * st = aspa_sta_get_st(res,t_idx);
+    gsl_vector_fread(STREAM,st);
+  }
+  return res;
+}
+
 /** @brief Reads data from stdin, allocates and intializes an
  *         aspa_spike_train_data structure
  *
