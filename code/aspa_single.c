@@ -76,6 +76,7 @@ int aspa_sta_free(aspa_sta * sta)
   for (size_t i=0; i < sta->n_trials; i++)
     gsl_vector_free(sta->st[i]);
   free(sta->st);
+  free(sta);
   return 0;
 }
 
