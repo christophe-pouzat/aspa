@@ -51,6 +51,8 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
 
 int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat);
 
+aspa_sta * aspa_sta_fscanf(FILE * STREAM);
+
 /** @brief Structure holding spike trains related data.
  *
  *  Since we work most of the time in a multi-trial setting,

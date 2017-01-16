@@ -47,7 +47,7 @@ gsl_vector * aspa_raw_fscanf(FILE * STREAM,
  *  contains the data from a single trial aligned on the stimulus 
  *  onset time.
  *
- *  @param[in] n_trials, the number of trials 
+ *  @param[in] n_trials the number of trials 
  *  @param[in] onset stimulus onset time (in s)
  *  @param[in] offset stimulus offset time (in s)
  *  @param[in] trial_duration as its name says (in s)
@@ -151,7 +151,7 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
   size_t n_spikes=raw->size; // Number of spikes in raw
   double iti = inter_trial_interval;
   // Find out the number of trials
-  double last_st = gsl_vector_get(raw,0); // Time of last spike
+  double last_st = gsl_vector_get(raw,0); // Time of last considered spike
   size_t trial_idx=floor(last_st/iti); // In which trial is the current spike
   size_t n_trials=1; // The number of trials
   for (size_t i=1; i<n_spikes; i++)
@@ -192,6 +192,32 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
   return res;
 }
 
+/** @brief Prints to stream the content of an aspa_sta structure
+ *
+ *  The printing "format" is selected throught the boolean variable
+ *  flat. If the latter is set to true, the spike times are written
+ *  one after the other (one per line) and the times are the actual
+ *  ones, not the "within trial" times. If flat is set to false, a 
+ *  header whose first four lines start with:
+ *  \# Number of trials:
+ *  \# Stimulus onset:
+ *  \# Stimulus offset:
+ *  \# Single trial duration:
+ *  is printed first. The spike times (within trial times) of each
+ *  trial are printed next with two blank lines separating the
+ *  different trials (suitable for gnuplot). Each trial starts with 
+ *  the following three comments lines:
+ *  \# Start of trial:
+ *  \# Trial start time:
+ *  \# Number of spikes:
+ *  and ends with:
+ *  \# End of trial:
+ *
+ *  @param[in/out] stream a pointer to an opened text file
+ *  @param[in] sta pointer to the aspa_sta structure to be written
+ *  @param[in] flat boolean indicator controlling what is written
+ *  @return 0 if successful  
+*/
 int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
 {
   if (flat == false) {
@@ -219,6 +245,78 @@ int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
     }
   }
   return 0;
+}
+
+/** @brief Scans multiple trials from a text file and return the
+ *         result in an allocated pointer to an aspa_sta structure
+ *
+ *  The expected format of the input is assumed to follow the following
+ *  layout: a header whose first four lines start with:
+ *  \# Number of trials:
+ *  \# Stimulus onset:
+ *  \# Stimulus offset:
+ *  \# Single trial duration:
+ *  The spike times (within trial times) of each
+ *  trial should be found next with two blank lines separating the
+ *  different trials (suitable for gnuplot). Each trial starts with 
+ *  the following three comments lines:
+ *  \# Start of trial:
+ *  \# Trial start time:
+ *  \# Number of spikes:
+ *  and ends with:
+ *  \# End of trial:  
+ *
+ *  @param[in/out] stream a pointer to an opened text file
+ *  @return a pointer to an allocated aspa_sta structure
+*/
+aspa_sta * aspa_sta_fscanf(FILE * STREAM)
+{
+  char buffer[256];
+  char value[128];
+  // Read line per line
+  fgets(buffer, sizeof(buffer), STREAM);
+  sscanf(buffer, "# Number of trials:  %127s", value);
+  size_t n_trials = atoi(value);
+  fgets(buffer, sizeof(buffer), STREAM);
+  sscanf(buffer, "# Stimulus onset:  %127s", value);
+  double onset = atof(value);
+  fgets(buffer, sizeof(buffer), STREAM);
+  sscanf(buffer, "# Stimulus offset:  %127s", value);
+  double offset = atof(value);
+  fgets(buffer, sizeof(buffer), STREAM);
+  sscanf(buffer, "# Single trial duration:  %127s", value);
+  double trial_duration = atof(value);
+  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset, trial_duration);
+  for (size_t t_idx=0; t_idx < n_trials; t_idx++)
+  {
+    // Read two blank lines
+    fgets(buffer, sizeof(buffer), STREAM);
+    fgets(buffer, sizeof(buffer), STREAM);
+    // Read line with trial number
+    fgets(buffer, sizeof(buffer), STREAM);
+    // Read line with trial start time
+    fgets(buffer, sizeof(buffer), STREAM);
+    sscanf(buffer, "# Trial start time:  %127s", value);
+    aspa_sta_set_st_start(res,t_idx,(double) atof(value));
+    // Read line with the number of spikes
+    fgets(buffer, sizeof(buffer), STREAM);
+    sscanf(buffer, "# Number of spikes:  %127s", value);
+    size_t n_spikes = atoi(value);
+    // Allocate spike times vector
+    res->st[t_idx] = gsl_vector_alloc(n_spikes);
+    // Loop over the spike times
+    for (size_t s_idx=0; s_idx < n_spikes; s_idx++)
+    {
+      float spike_time;
+      fgets(buffer, sizeof(buffer), STREAM);
+      sscanf(buffer,"%f",&spike_time);
+      //fscanf(STREAM,"%f",&spike_time);
+      gsl_vector_set(res->st[t_idx],s_idx,(double) spike_time);
+    }
+    // Read line with trial number
+    fgets(buffer, sizeof(buffer), STREAM);
+  }
+  return res;
 }
 
 /** @brief Reads data from stdin, allocates and intializes an
