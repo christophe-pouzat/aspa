@@ -60,9 +60,13 @@ int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat);
 
 aspa_sta * aspa_sta_fscanf(FILE * STREAM);
 
+size_t aspa_sta_n_spikes(const aspa_sta * sta);
+
 int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat);
 
 aspa_sta * aspa_sta_fread(FILE * STREAM);
+
+aspa_sta * aspa_sta_aggregate(const aspa_sta * sta);
 
 /** @brief Structure holding spike trains related data.
  *

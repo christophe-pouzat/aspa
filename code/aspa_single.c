@@ -327,6 +327,23 @@ aspa_sta * aspa_sta_fscanf(FILE * STREAM)
   return res;
 }
 
+/** @brief Returns the total number of spikes contained in 
+ *         an aspa_sta structure
+ *
+ *  @param[in] sta a pointer to an aspa_sta structure
+ *  @result the total number of spikes
+*/
+size_t aspa_sta_n_spikes(const aspa_sta * sta)
+{
+  size_t n_total = 0;
+  for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+  {
+    gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    n_total += st->size;
+  }
+  return n_total;
+}
+
 /** @brief Prints in binary to stream the content of an aspa_sta structure
  *
  *  What is printed is selected throught the boolean variable
@@ -349,12 +366,7 @@ int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
 {
   if (flat == true) {
     // find out the total number of spikes
-    size_t n_total = 0;
-    for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
-    {
-      gsl_vector * st = aspa_sta_get_st(sta,t_idx);
-      n_total += st->size;
-    }
+    size_t n_total = aspa_sta_n_spikes(sta);
     fwrite(&n_total,sizeof(size_t),1,stream);
     for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
     {
@@ -424,6 +436,32 @@ aspa_sta * aspa_sta_fread(FILE * STREAM)
     gsl_vector * st = aspa_sta_get_st(res,t_idx);
     gsl_vector_fread(STREAM,st);
   }
+  return res;
+}
+
+/** @brief Aggregates many trials of a spike train
+ *
+ *  @param[in] sta pointer to the aspa_sta to aggregate
+ *  @return a pointer to new "aggregated" aspa_sta if everyhing goes fine.
+*/
+aspa_sta * aspa_sta_aggregate(const aspa_sta * sta)
+{
+  aspa_sta * res = aspa_sta_alloc(1, sta->n_trials, sta->onset, sta->offset, sta->trial_duration);
+  aspa_sta_set_st_start(res,0,aspa_sta_get_st_start(sta,0));
+  size_t n_trials = sta->n_trials;
+  res->st[0] = gsl_vector_alloc(aspa_sta_n_spikes(sta));
+  gsl_vector * rst = aspa_sta_get_st(res,0);
+  size_t s_idx=0;
+  for (size_t t_idx=0; t_idx<n_trials; t_idx++)
+  {
+    gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    for (size_t i=0; i < st->size; i++)
+    {
+      gsl_vector_set(rst,s_idx,gsl_vector_get(st,i));
+      s_idx++;
+    }
+  }
+  gsl_sort_vector(rst);
   return res;
 }
 
