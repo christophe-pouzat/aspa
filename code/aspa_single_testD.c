@@ -11,9 +11,10 @@ int main()
   gsl_vector_free(st_flat);
   // aggregate
   aspa_sta * asta = aspa_sta_aggregate(sta);
+  aspa_raster_plot_i(sta);
   aspa_sta_free(sta);
   // write aggregated structure to file
-  aspa_sta_fprintf(stdout,asta,false);
+  //aspa_sta_fprintf(stdout,asta,false);
   aspa_sta_free(asta);
   return 0;
 }

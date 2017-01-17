@@ -344,6 +344,42 @@ size_t aspa_sta_n_spikes(const aspa_sta * sta)
   return n_total;
 }
 
+/** @brief Returns means number of spikes per second
+ *
+ *  @aparam[in] sta a pointer to an aspa_sta structure
+ *  @return the mean spike rate
+*/
+double aspa_sta_rate(const aspa_sta * sta)
+{
+  double total_obs_time = sta->n_trials*sta->trial_duration;
+  return aspa_sta_n_spikes(sta)/total_obs_time/sta->n_aggregated;
+}
+
+/** @brief Return a gsl_vector containing the inter spike intervals
+ *         (ISI) of an aspa_sta structure.
+ *
+ *  The ISI from each trial are obtained and put together, one after
+ *  the other.
+ *
+ *  @param[in] sta a pointer to an apsa_sta structure
+ *  @return a pointer to a gsl_vector with the ISI
+*/
+gsl_vector * aspa_sta_isi(const aspa_sta * sta)
+{
+  gsl_vector * isi = gsl_vector_alloc(aspa_sta_n_spikes(sta)-sta->n_trials);
+  size_t isi_idx;
+  for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+  {
+    gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    for (size_t i=0; i < (st->size-1); i++)
+    {
+      gsl_vector_set(isi,isi_idx,gsl_vector_get(st,i+1)-gsl_vector_get(st,i));
+      isi_idx++;
+    }
+  }
+  return isi;
+}
+
 /** @brief Prints in binary to stream the content of an aspa_sta structure
  *
  *  What is printed is selected throught the boolean variable
@@ -465,418 +501,124 @@ aspa_sta * aspa_sta_aggregate(const aspa_sta * sta)
   return res;
 }
 
-/** @brief Reads data from stdin, allocates and intializes an
- *         aspa_spike_train_data structure
+/** @brief Plots the observed counting process assiociated with
+ *         an aspa_sta structure
  *
- *  The data entered in stdin are assumed to be organized
- *  in a single column (one spike time per line).
+ *  The "observed counting process" (OCP) of an aspa_sta structure can
+ *  be built in several ways: 
+ *   - If the process is not aggregated the counts vs real time can
+ *   be displayed (a single OCP is then shown). (param flat -> true)
+ *   - If the process is not aggregated the counts vs within trial
+ *   time can be displayed (as many OCP as trials are then shown).
+ *   - If the process as been aggregated the mean OCP where the 
+ *   count increase due to each spike is 1 / number_of_trials can
+ *   be displayed (param normalized -> true).
  *
- *  @param[in] sampling_frequency as its name says (in Hz)
- *  @param[in] inter_trial_interval as its name says (in s)
- *  @returns a pointer to an initialized aspa_spike_train_data
+ *  @param[in] sta a pointer to the sta structure
+ *  @param[in] flat boolean controlling if actual or within trial
+ *             time is used
+ *  @param[in] normalized boolean controlling if the mean OCP is
+ *             is displayed 
 */
-aspa_spike_train_data * aspa_get_spike_train_data(double sampling_frequency,
-						  double inter_trial_interval)
+void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
 {
-  size_t buffer_length = default_length;
-  double *buffer=calloc(buffer_length, sizeof(double));
-  size_t counter=0;
-  char line[BUFSIZ];
-  while (fgets (line, BUFSIZ, stdin))
-  {
-    buffer[counter] = atof(line)/sampling_frequency;
-    counter++;
-    if (counter>=buffer_length)
+  FILE *gp=NULL;
+  if (!gp)
+    gp = popen("gnuplot -persist","w");
+  if (!gp) {
+    printf("Couldn't open Gnuplot.\n");
+    return;
+  }
+  fprintf(gp,"set term qt; set grid; unset key\n");
+  fprintf(gp,"set xlabel 'Time (s)'\n");
+  if (normalized == true || flat == true) {
+    if (flat == true)
     {
-      buffer_length*=2;
-      buffer=realloc(buffer,buffer_length*sizeof(double));
-    }
-  }
-  if (!feof(stdin))
-  {
-    fprintf (stderr, "Reading problem\n");
-    exit (EXIT_FAILURE);
-  }
-  aspa_spike_train_data * res = malloc(sizeof(aspa_spike_train_data));
-  res->inter_trial_interval = inter_trial_interval;
-  res->n_spikes = counter;
-  res->aggregate = 0;
-  res->spike_train = malloc(counter*sizeof(double));
-  for (size_t i=0; i<counter; i++)
-    res->spike_train[i]=buffer[i];
-  free(buffer);
-  return res;
-}
-
-/** @brief Frees memory of aspa_spike_train_data structure
- * 
- *  @param st The aspa_spike_train_data to free
- *  @return 0 if everyhing goes fine.
-*/
-int aspa_spike_train_data_free(aspa_spike_train_data * st)
-{
-  free(st->spike_train);
-  free(st);
-  return 0;
-}
-
-/** @brief Creates an aspa_spike_train_data_array from an aspa_spike_train_data
- *
- *  The function splits the times of the spike_train member of its input into
- *  as many aspa_spike_train_data as there are trials where each new aspa_spike_train_data
- *  contains the offset data from a single trial
- *
- *  @param[in] st a pointer to an aspa_spike_train_data structure
- *  @returns a pointer to an initialized aspa_spike_train_data_array
-*/
-aspa_spike_train_data_array * aspa_get_spike_train_data_array(aspa_spike_train_data * st)
-{
-  aspa_spike_train_data_array * res = malloc(sizeof(aspa_spike_train_data_array));
-  size_t n_spikes=st->n_spikes; // Number of spikes in spike train
-  double iti = st->inter_trial_interval;
-  // Find ot the number of trials
-  double last_st = st->spike_train[0]; // Time of last spike
-  size_t trial_idx=floor(last_st/iti); // In which trial is the current spike
-  size_t n_trials=1; // The number of trials
-  for (size_t i=1; i<n_spikes; i++)
-  {
-    double current_st = st->spike_train[i]; // Time of spike i
-    size_t current_idx = floor(current_st/iti);
-    if (current_idx > trial_idx)
-      n_trials++;
-  }
-  res->n_trials = n_trials;
-  res->trial_start_time = malloc(n_trials*sizeof(double));
-  res->spike_train_data = malloc(n_trials*sizeof(aspa_spike_train_data *));
-  double current_train[n_spikes];
-  size_t s_idx=0;
-  for (size_t t_idx=0; t_idx<n_trials; t_idx++)
-  {
-    double current_st = st->spike_train[s_idx];
-    size_t current_idx = floor(current_st/iti);
-    res->trial_start_time[t_idx] = current_idx*iti;
-    size_t within_index=0;
-    while (floor(current_st/iti) == current_idx && s_idx<n_spikes)
-    {
-      current_train[within_index] = current_st-current_idx*iti;
-      within_index++;
-      s_idx++;
-      current_st = st->spike_train[s_idx];
-    }
-    res->spike_train_data[t_idx] = malloc(sizeof(aspa_spike_train_data));
-    res->spike_train_data[t_idx]->n_spikes=within_index;
-    res->spike_train_data[t_idx]->inter_trial_interval=iti;
-    res->spike_train_data[t_idx]->spike_train=malloc(within_index*sizeof(double));
-    res->spike_train_data[t_idx]->aggregate=0;
-    for (size_t i=0; i<within_index; i++)
-      res->spike_train_data[t_idx]->spike_train[i] = current_train[i];
-  }
-  return res;
-}
-
-/** @brief Frees memory of aspa_spike_train_data_array structure
- * 
- *  @param sta The aspa_spike_train_data_array to free
- *  @return 0 if everyhing goes fine.
-*/
-int aspa_spike_train_data_array_free(aspa_spike_train_data_array * sta)
-{
-  free(sta->trial_start_time);
-  for (size_t i=0; i<sta->n_trials; i++)
-    free(sta->spike_train_data[i]);
-  free(sta->spike_train_data);
-  free(sta);
-  return 0;
-}
-
-/** @brief Aggregates many trials of a spike train
- *
- *  @param[in] st The aspa_spike_train_data to aggregate
- *  @return a new "aggregated" aspa_spike_train_data if everyhing goes fine.
-*/
-//aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data * st)
-aspa_spike_train_data * aspa_aggregate_spike_train(const aspa_spike_train_data_array * sta)
-{
-  aspa_spike_train_data * res = malloc(sizeof(aspa_spike_train_data));
-  size_t n_trials = sta->n_trials;
-  size_t n_spikes=0; // Number of spikes in spike train
-  for (size_t i=0; i<n_trials; i++)
-    n_spikes+=(sta->spike_train_data[i])->n_spikes;
-  //size_t n_spikes=st->n_spikes; // Number of spikes in spike train
-  res->n_spikes = n_spikes;
-  //double iti = st->inter_trial_interval;
-  double iti = (sta->spike_train_data[0])->inter_trial_interval;
-  res->inter_trial_interval = iti;
-  res->spike_train = malloc(n_spikes*sizeof(double));
-  size_t s_idx=0;
-  for (size_t i=0; i<n_trials; i++)
-  {
-    for (size_t j=0; j<(sta->spike_train_data[i])->n_spikes; j++)
-    {
-      res->spike_train[s_idx] = (sta->spike_train_data[i])->spike_train[j];
-      s_idx++;
-    }
-  }
-  //size_t n_trials=0; // The number of trials
-  //double last_st = st->spike_train[0]; // Time of last spike
-  //size_t trial_idx=floor(last_st/iti); // In which trial is the current spike
-  //res->spike_train[0] = st->spike_train[0]-iti*trial_idx;
-  //n_trials++; 
-  //for (size_t i=1; i<n_spikes; i++)
-  //{
-  //  double current_st = st->spike_train[i]; // Time of spike i
-  //  size_t current_idx = floor(current_st/iti);
-  //  if (current_idx > trial_idx)
-  //  { // If the trial of spike i is not the one of the previous spike
-  //    // We change trial_idx
-  //    trial_idx = current_idx;
-  //    // We increase the number of "observed" trials
-  //    n_trials++;
-  //  }
-  //  res->spike_train[i] = current_st-iti*trial_idx;
-  //  last_st=current_st;
-  //}
-  res->aggregate = n_trials;
-  gsl_sort(res->spike_train,1,n_spikes);
-  return res;
-}
-
-/** @brief Reads data from STREAM and allocates a gsl_vector
- *
- *  The data pointed to by STREAM are assumed to be organized
- *  in a single column (one spike time per line).
- *
- *  @param[in/out] STREAM pointer to an opened file or stdin
- *  @param[in] sampling_frequency as its name says (in Hz)
- *  @returns a pointer to an initialized gsl_vector
-*/
-gsl_vector * read_spike_train(FILE * STREAM, double sampling_frequency)
-{
-  size_t buffer_length = default_length;
-  double *buffer=calloc(buffer_length, sizeof(double));
-  size_t counter=0;
-  char line[BUFSIZ];
-  while (fgets (line, BUFSIZ, STREAM))
-  {
-    buffer[counter] = atof(line)/sampling_frequency;
-    counter++;
-    if (counter>=buffer_length)
-    {
-      buffer_length*=2;
-      buffer=realloc(buffer,buffer_length*sizeof(double));
-    }
-  }
-  if (!feof(STREAM))
-  {
-    fprintf (stderr, "Reading problem\n");
-    exit (EXIT_FAILURE);
-  }
-  gsl_vector * res = gsl_vector_alloc(counter);
-  for (size_t i=0; i<counter; i++)
-    gsl_vector_set(res,i,buffer[i]);
-  free(buffer);
-  return res;
-}
-
-
-/** @brief Allocates memory for an isi_data structure
- * 
- *  @param n_isi The number of isi.
- *  @return A pointer to an allocated isi_data structure. 
-*/
-aspa_isi_data * aspa_isi_data_alloc(size_t n_isi)
-{
-  aspa_isi_data * res = malloc(sizeof(aspa_isi_data));
-  res->n_isi = n_isi;
-  res->spike_time = malloc(n_isi*sizeof(double));
-  res->isi = malloc(n_isi*sizeof(double));
-  res->trial = malloc(n_isi*sizeof(size_t));
-  res->rank = malloc(n_isi*sizeof(size_t));
-  return res;
-}
-
-/** @brief Frees memory of isi_data structure
- * 
- *  @param isid The isi_data to free
- *  @return 0 if everyhing goes fine.
-*/
-int aspa_isi_data_free(aspa_isi_data * isid)
-{
-  free(isid->spike_time);
-  free(isid->isi);
-  free(isid->trial);
-  free(isid->rank);
-  free(isid);
-  return 0;
-}
-
-/** @brief Get a vector of inter spike intervals (isi) from a spike train
- *
- *  The only subtlety is the potential presence of many trials assumed to 
- *  be regularly spaced every inter_trial_interval seconds. If such is the
- *  case the last spike of trial i and the first of trial i+1 should not
- *  be used to construct an isi.
- *
- *  @param[in] st a pointer to a gsl_vector containing the spike train
- *  @param[in] inter_trial_interval the elapsed time between trials
- *  @param[out] n_trials a pointer to a size_t, the number of trials
- *  @return A pointer to an allocated gsl_vector 
-*/
-gsl_vector * get_isi(gsl_vector *st, double inter_trial_interval, size_t *n_trials)
-{
-  size_t n_spikes=st->size; // Number of spikes in spike train
-  double isi[n_spikes]; // Array containing isi
-  *n_trials=0; // The number of trials
-  double last_st = gsl_vector_get(st,0); // Time of last spike
-  size_t trial_idx=floor(last_st/inter_trial_interval); // In which trial is the current spike
-  (*n_trials)++; 
-  size_t n_isi=0; // The number of isi
-  for (size_t i=1; i<n_spikes; i++)
-  {
-    double current_st = gsl_vector_get(st,i); // Time of spike i
-    size_t current_idx = floor(current_st/inter_trial_interval);
-    if (current_idx > trial_idx)
-    { // If the trial of spike i is not the one of the previous spike
-      // We change trial_idx
-      trial_idx = current_idx;
-      // We increase the number of "observed" trials
-      (*n_trials)++;
+      fprintf(gp,"set title 'Observed counting process'\n");
+      fprintf(gp,"set ylabel 'Events count'\n");
     } else {
-      // The current and previous spike give an isi value
-      isi[n_isi] = current_st-last_st;
-      n_isi++;
+      fprintf(gp,"set title 'Observed mean counting process'\n");
+      fprintf(gp,"set ylabel 'Mean events count'\n");
     }
-    last_st=current_st;
+    fprintf(gp," plot '-' u 1:2 with steps\n");
+    double step = 1.0/sta->n_aggregated;
+    double s_idx = step;
+    for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+    {
+      gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+      double start_time = aspa_sta_get_st_start(sta,t_idx);
+      for (size_t i=0; i < st->size; i++)
+      {
+	fprintf(gp,"%g %g\n", gsl_vector_get(st,i)+start_time, s_idx);
+	s_idx+=step;
+      }
+    }
+  } else {
+    fprintf(gp,"set title 'Observed counting processes'\n");
+    fprintf(gp,"set ylabel 'Events count'\n");
+    fprintf(gp," plot '-' u 1:2 with steps\n");
+    for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+    {
+      int s_idx = 1;
+      gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+      for (size_t i=0; i < st->size; i++)
+      {
+	fprintf(gp,"%g %d\n", gsl_vector_get(st,i), (int) s_idx);
+	s_idx++;
+      }
+      fprintf(gp,"\n\n");
+    }
   }
-  gsl_vector *res=gsl_vector_alloc(n_isi);
-  for (size_t i=0; i<n_isi; i++)
-    gsl_vector_set(res,i,isi[i]);
-  return res;
+  fprintf(gp,"e\n");
+  fflush(gp);
+  pclose(gp);
 }
 
-/** @brief Get a matrix whose first row contains the spike time of the left
- *         boundary of an isi, the second row contains the isi and the third
- *         row contains the rank of the isi.
- *
- *  The only subtlety is the potential presence of many trials assumed to 
- *  be regularly spaced every inter_trial_interval seconds. If such is the
- *  case the last spike of trial i and the first of trial i+1 should not
- *  be used to construct an isi.
- *
- *  @param[in] st a pointer to a gsl_vector containing the spike train
- *  @param[in] inter_trial_interval the elapsed time between trials
- *  @param[out] n_trials a pointer to a size_t, the number of trials
- *  @return A pointer to an allocated gsl_matrix 
-*/
-gsl_matrix * get_isi_rank(gsl_vector *st, double inter_trial_interval, size_t *n_trials)
+void aspa_raster_plot_i(const aspa_sta * sta)
 {
-  size_t n_spikes=st->size; // Number of spikes in spike train
-  double isi[n_spikes]; // Array containing isi
-  double left[n_spikes]; // Array containing spike time of the "left" spike of an isi
-  *n_trials=0; // The number of trials
-  double last_st = gsl_vector_get(st,0); // Time of last spike
-  size_t trial_idx=floor(last_st/inter_trial_interval); // In which trial is the current spike
-  (*n_trials)++; 
-  size_t n_isi=0; // The number of isi
-  for (size_t i=1; i<n_spikes; i++)
-  {
-    double current_st = gsl_vector_get(st,i); // Time of spike i
-    size_t current_idx = floor(current_st/inter_trial_interval);
-    if (current_idx > trial_idx)
-    { // If the trial of spike i is not the one of the previous spike
-      // We change trial_idx
-      trial_idx = current_idx;
-      // We increase the number of "observed" trials
-      (*n_trials)++;
-    } else {
-      // The current and previous spike give an isi value
-      isi[n_isi] = current_st-last_st;
-      left[n_isi] = last_st;
-      n_isi++;
-    }
-    last_st=current_st;
+  FILE *gp=NULL;
+  if (!gp)
+    gp = popen("gnuplot -persist","w");
+  if (!gp) {
+    printf("Couldn't open Gnuplot.\n");
+    return;
   }
-  gsl_matrix *res=gsl_matrix_alloc(3,n_isi);
-  for (size_t i=0; i<n_isi; i++)
+  fprintf(gp,"set term qt; set grid; unset key\n");
+  fprintf(gp,"set xlabel 'Time (s)'\n");
+  fprintf(gp,"set ylabel 'Trial'\n");
+  fprintf(gp," plot '-' u 1:2 with dots\n");
+  for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
   {
-    // Column 0 contains the time of the spike making the
-    // left boundary of the isi
-    gsl_matrix_set(res,0,i,left[i]);
-    // Column 1 contains the isi
-    gsl_matrix_set(res,1,i,isi[i]);
+    gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    for (size_t i=0; i < st->size; i++)
+      fprintf(gp,"%g %d\n", gsl_vector_get(st,i), (int) t_idx+1);
+    fprintf(gp,"\n\n");
   }
-  // Column 3 of res will contain the rank of the isi
-  // We obtain the rank following Sec. 12.4 of the GSL manual 
-  gsl_vector_const_view c1 = gsl_matrix_const_row(res,1);
-  gsl_permutation * perm = gsl_permutation_alloc(n_isi);
-  gsl_permutation * rank = gsl_permutation_alloc(n_isi);
-  gsl_sort_vector_index(perm,&c1.vector);
-  gsl_permutation_inverse(rank,perm);
-  for (size_t i=0; i<n_isi; i++)
-    gsl_matrix_set(res,2,i,(double) gsl_permutation_get(rank,i));
-  gsl_permutation_free(perm);
-  gsl_permutation_free(rank);
-  return res;
+  fprintf(gp,"e\n");
+  fflush(gp);
+  pclose(gp);
 }
 
-/** @brief Allocates and initializes an aspa_isi_data structure.
- *
- *  The only subtlety is the potential presence of many trials assumed to 
- *  be regularly spaced every inter_trial_interval seconds. If such is the
- *  case the last spike of trial i and the first of trial i+1 should not
- *  be used to construct an isi.
- *
- *  @param[in] st a pointer to a aspa_spike_train_data containing the spike train
- *  @return A pointer to an allocated and initialized aspa_isi_data structure 
-*/
-aspa_isi_data * aspa_get_isi_data(aspa_spike_train_data *st)
+aspa_fns aspa_fns_get(const gsl_vector * data)
 {
-  size_t n_spikes=st->n_spikes; // Number of spikes in spike train
-  double inter_trial_interval=st->inter_trial_interval;
-  size_t trial[n_spikes]; // Trial
-  double isi[n_spikes]; // Array containing isi
-  double left[n_spikes]; // Array containing spike time of the "left" spike of an isi
-  size_t n_trials=0; // The number of trials
-  double last_st = st->spike_train[0]; // Time of last spike
-  size_t trial_idx=floor(last_st/inter_trial_interval); // In which trial is the current spike
-  n_trials++; 
-  size_t n_isi=0; // The number of isi
-  for (size_t i=1; i<n_spikes; i++)
-  {
-    double current_st = st->spike_train[i]; // Time of spike i
-    size_t current_idx = floor(current_st/inter_trial_interval);
-    if (current_idx > trial_idx)
-    { // If the trial of spike i is not the one of the previous spike
-      // We change trial_idx
-      trial_idx = current_idx;
-      // We increase the number of "observed" trials
-      n_trials++;
-    } else {
-      // The current and previous spike give an isi value
-      isi[n_isi] = current_st-last_st;
-      left[n_isi] = last_st;
-      trial[n_isi] = trial_idx;
-      n_isi++;
-    }
-    last_st=current_st;
-  }
-  aspa_isi_data * res = aspa_isi_data_alloc(n_isi);
-  res->n_trials = n_trials;
-  for (size_t i=0; i<n_isi; i++)
-  {
-    res->spike_time[i] = left[i];
-    res->isi[i] = isi[i];
-    res->trial[i] = trial[i];
-  }
-  // We obtain the rank following Sec. 12.4 of the GSL manual
-  gsl_vector_const_view isi_gv = gsl_vector_const_view_array(res->isi,n_isi);
-  gsl_permutation * perm = gsl_permutation_alloc(n_isi);
-  gsl_permutation * rank = gsl_permutation_alloc(n_isi);
-  gsl_sort_vector_index(perm,&isi_gv.vector);
-  gsl_permutation_inverse(rank,perm);
-  for (size_t i=0; i<n_isi; i++)
-    res->rank[i] = gsl_permutation_get(rank,i);
-  gsl_permutation_free(perm);
-  gsl_permutation_free(rank);
-  return res;
+  size_t n = data->size;
+  gsl_vector * tmp = gsl_vector_alloc(n);
+  gsl_vector_memcpy(tmp,data);
+  gsl_sort_vector(tmp);
+  double median = gsl_stats_median_from_sorted_data(tmp->data,1,n);
+  double upperq = gsl_stats_quantile_from_sorted_data(tmp->data,1,n,0.75);
+  double lowerq = gsl_stats_quantile_from_sorted_data(tmp->data,1,n,0.25);
+  double min = gsl_vector_get(tmp,0);
+  double max = gsl_vector_get(tmp,n-1);
+  double mean = gsl_stats_mean(tmp->data,1,n);
+  double var = gsl_stats_variance(tmp->data,1,n);
+  gsl_vector_add_constant(tmp,-median);
+  for (size_t i=0; i<n; i++)
+    gsl_vector_set(tmp,i,fabs(gsl_vector_get(tmp,i)));
+  gsl_sort_vector(tmp);
+  double mad = 1.4826*gsl_stats_median_from_sorted_data(tmp->data,1,n);
+  gsl_vector_free(tmp);
+  return (aspa_fns) {.n=n,.mean=mean,.min=min,
+      .max=max,.upperq=upperq,.lowerq=lowerq,
+      .median=median,.mad=mad,.var=var};
 }
