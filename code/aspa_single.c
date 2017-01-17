@@ -53,10 +53,11 @@ gsl_vector * aspa_raw_fscanf(FILE * STREAM,
  *  @param[in] trial_duration as its name says (in s)
  *  @returns a pointer to an allocated aspa_sta
 */
-aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset, double trial_duration)
+aspa_sta * aspa_sta_alloc(size_t n_trials, size_t n_aggregated, double onset, double offset, double trial_duration)
 {
   aspa_sta * res = malloc(sizeof(aspa_sta));
   res->n_trials = n_trials;
+  res->n_aggregated = n_aggregated;
   res->onset = onset;
   res->offset = offset;
   res->trial_duration = trial_duration;
@@ -165,7 +166,7 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
       n_trials++;
     }
   }
-  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset, trial_duration);
+  aspa_sta * res = aspa_sta_alloc(n_trials, 1, onset, offset, trial_duration);
   double current_train[n_spikes];
   size_t s_idx=0;
   for (size_t t_idx=0; t_idx<n_trials; t_idx++)
@@ -199,8 +200,9 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
  *  flat. If the latter is set to true, the spike times are written
  *  one after the other (one per line) and the times are the actual
  *  ones, not the "within trial" times. If flat is set to false, a 
- *  header whose first four lines start with:
+ *  header whose first five lines start with:
  *  \# Number of trials:
+ *  \# Number of aggregated trials:
  *  \# Stimulus onset:
  *  \# Stimulus offset:
  *  \# Single trial duration:
@@ -223,6 +225,7 @@ int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
 {
   if (flat == false) {
     fprintf(stream,"# Number of trials: %d\n",(int) sta->n_trials);
+    fprintf(stream,"# Number of aggregated trials: %d\n",(int) sta->n_aggregated);
     fprintf(stream,"# Stimulus onset: %g (s)\n",sta->onset);
     fprintf(stream,"# Stimulus offset: %g (s)\n",sta->offset);
     fprintf(stream,"# Single trial duration: %g (s)\n",sta->trial_duration);
@@ -252,8 +255,9 @@ int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
  *         result in an allocated pointer to an aspa_sta structure
  *
  *  The expected format of the input is assumed to follow the following
- *  layout: a header whose first four lines start with:
+ *  layout: a header whose first five lines start with:
  *  \# Number of trials:
+ *  \# Number of aggregated trials:
  *  \# Stimulus onset:
  *  \# Stimulus offset:
  *  \# Single trial duration:
@@ -279,6 +283,9 @@ aspa_sta * aspa_sta_fscanf(FILE * STREAM)
   sscanf(buffer, "# Number of trials:  %127s", value);
   size_t n_trials = atoi(value);
   fgets(buffer, sizeof(buffer), STREAM);
+  sscanf(buffer, "# Number of aggregated trials:  %127s", value);
+  size_t n_aggregated = atoi(value);
+  fgets(buffer, sizeof(buffer), STREAM);
   sscanf(buffer, "# Stimulus onset:  %127s", value);
   double onset = atof(value);
   fgets(buffer, sizeof(buffer), STREAM);
@@ -287,7 +294,7 @@ aspa_sta * aspa_sta_fscanf(FILE * STREAM)
   fgets(buffer, sizeof(buffer), STREAM);
   sscanf(buffer, "# Single trial duration:  %127s", value);
   double trial_duration = atof(value);
-  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset, trial_duration);
+  aspa_sta * res = aspa_sta_alloc(n_trials, n_aggregated, onset, offset, trial_duration);
   for (size_t t_idx=0; t_idx < n_trials; t_idx++)
   {
     // Read two blank lines
@@ -328,7 +335,8 @@ aspa_sta * aspa_sta_fscanf(FILE * STREAM)
  *  one after the other--the times are the actual
  *  ones, not the "within trial" times--. 
  *  If flat is set to false, a size_t with the number of trials is written first
- *  followed by the stimulus onset, offset and the single trial duration as doubles.
+ *  followed by the number of aggregated trials (size_t), the stimulus onset, 
+ *  offset and the single trial duration as doubles.
  *  Then, for each trial, a trial start time (double), the number of spikes in the 
  *  trial (size_t) followed by the within trials spike times.
  *
@@ -361,6 +369,7 @@ int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
     }
   } else {
     fwrite(&(sta->n_trials),sizeof(size_t),1,stream);
+    fwrite(&(sta->n_aggregated),sizeof(size_t),1,stream);
     fwrite(&(sta->onset),sizeof(double),1,stream);
     fwrite(&(sta->offset),sizeof(double),1,stream);
     fwrite(&(sta->trial_duration),sizeof(double),1,stream);
@@ -381,7 +390,8 @@ int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
  *
  *  The expected format of the input is assumed to follow the following
  *  layout: 
- *  a size_t with the number of trials followed by the stimulus onset, 
+ *  a size_t with the number of trials followed a size_t with the number
+ *  of aggregated trials, by the stimulus onset, 
  *  offset and the single trial duration as doubles.
  *  Then, for each trial, a trial start time (double), the number of spikes in the 
  *  trial (size_t) followed by the within trials spike times.
@@ -393,13 +403,15 @@ aspa_sta * aspa_sta_fread(FILE * STREAM)
 {
   size_t n_trials;
   fread(&n_trials, sizeof(size_t),1,STREAM);
+  size_t n_aggregated;
+  fread(&n_aggregated, sizeof(size_t),1,STREAM);
   double onset;
   fread(&onset, sizeof(double),1,STREAM);
   double offset;
   fread(&offset, sizeof(double),1,STREAM);
   double trial_duration;
   fread(&trial_duration, sizeof(double),1,STREAM);
-  aspa_sta * res = aspa_sta_alloc(n_trials, onset, offset, trial_duration);
+  aspa_sta * res = aspa_sta_alloc(n_trials, n_aggregated, onset, offset, trial_duration);
   for (size_t t_idx=0; t_idx < n_trials; t_idx++)
   {
     double start_time;

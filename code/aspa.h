@@ -25,11 +25,18 @@ gsl_vector * aspa_raw_fscanf(FILE * STREAM, double sampling_frequency);
  *
  *  Since we work most of the time in a multi-trial setting,
  *  the structure is designed to hold arrays of gsl_vectors.
+ *  Some of the analysis carried out on these objects will 
+ *  require an "aggregation" of several trials (after aligning
+ *  them on a "reference time" like the stimulus onset). We will
+ *  keep track of this aggregation with the n_aggregated member.
+ *  The latter will be 1 if no aggregation has been performed and
+ *  will contain the number of aggregated trials otherwise.
  *  sta stands for: spike train array.
 */
 typedef struct
 {
   size_t n_trials; //<! Number of trials
+  size_t n_aggregated; //<! Number of "real trials" aggregated per "trial" 
   double onset; //<! Stimulus onset time (s)
   double offset; //<! Stimulus offset time (s)
   double trial_duration; //<! Single trial duration (s)
@@ -37,7 +44,7 @@ typedef struct
   gsl_vector ** st; //<! The spike trains
 } aspa_sta;
 
-aspa_sta * aspa_sta_alloc(size_t n_trials, double onset, double offset, double trial_duration);
+aspa_sta * aspa_sta_alloc(size_t n_trials, size_t n_aggregated, double onset, double offset, double trial_duration);
 
 int aspa_sta_free(aspa_sta * sta);
 
