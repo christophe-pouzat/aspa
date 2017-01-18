@@ -34,6 +34,12 @@ aspa_single_testD : $(aspa_single_testD_objects) libaspa.a
 
 aspa_single_testD.o : aspa.h
 
+aspa_single_testE_objects=aspa_single_testE.o
+aspa_single_testE : $(aspa_single_testE_objects) libaspa.a
+	cc $(aspa_single_testE_objects) libaspa.a $(LDLIBS) -o aspa_single_testE
+
+aspa_single_testE.o : aspa.h
+
 .PHONY : clean
 clean :
 	rm -f libaspa.a \
@@ -41,4 +47,5 @@ clean :
 	$(aspa_single_test_objects) aspa_single_test \
 	$(aspa_single_testB_objects) aspa_single_testB \
 	$(aspa_single_testC_objects) aspa_single_testC \
-	$(aspa_single_testD_objects) aspa_single_testD
+	$(aspa_single_testD_objects) aspa_single_testD \
+	$(aspa_single_testE_objects) aspa_single_testE

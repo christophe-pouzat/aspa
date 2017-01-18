@@ -367,13 +367,16 @@ double aspa_sta_rate(const aspa_sta * sta)
 gsl_vector * aspa_sta_isi(const aspa_sta * sta)
 {
   gsl_vector * isi = gsl_vector_alloc(aspa_sta_n_spikes(sta)-sta->n_trials);
-  size_t isi_idx;
+  size_t isi_idx=0;
   for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
   {
     gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    double present = gsl_vector_get(st,0);
     for (size_t i=0; i < (st->size-1); i++)
     {
-      gsl_vector_set(isi,isi_idx,gsl_vector_get(st,i+1)-gsl_vector_get(st,i));
+      double next = gsl_vector_get(st,i+1);
+      gsl_vector_set(isi,isi_idx,next-present);
+      present=next;
       isi_idx++;
     }
   }
@@ -621,4 +624,28 @@ aspa_fns aspa_fns_get(const gsl_vector * data)
   return (aspa_fns) {.n=n,.mean=mean,.min=min,
       .max=max,.upperq=upperq,.lowerq=lowerq,
       .median=median,.mad=mad,.var=var};
+}
+
+int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns)
+{
+  fprintf(STREAM,"The sample contains %d elements.\n",
+	  (int) fns->n);
+  fprintf(STREAM,"The mean and SD are   : %3g and %3g.\n",
+	  fns->mean, sqrt(fns->var));
+  fprintf(STREAM,"The median and MAD are: %3g and %3g.\n",
+	  fns->median, fns->mad);
+  fprintf(STREAM,"The five number summary:\n");
+  fprintf(STREAM,"Min.      1st qrt    Median    3rd qrt   Max. \n");
+  fprintf(STREAM,"%-6g %-6g  %-6g %-6g    %-6g\n",
+	 fns->min,fns->lowerq,fns->median,fns->upperq,fns->max);
+  return 0;
+}
+
+double aspa_lagged_spearman(const gsl_vector * data, size_t lag)
+{
+  size_t n = data->size;
+  assert (lag < n); // make sure the lag is small enough
+  gsl_vector_const_view lagged = gsl_vector_const_subvector(data,lag,n-lag);
+  double work[2*(n-lag)];
+  return gsl_stats_spearman(data->data,1,(&lagged.vector)->data,1,n-lag,work);
 }
