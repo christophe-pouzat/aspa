@@ -522,6 +522,7 @@ aspa_sta * aspa_sta_aggregate(const aspa_sta * sta)
  *             time is used
  *  @param[in] normalized boolean controlling if the mean OCP is
  *             is displayed 
+ *  @return nothing the function is only used for its side effect
 */
 void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
 {
@@ -577,6 +578,13 @@ void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
   pclose(gp);
 }
 
+/** @brief Generates a raster plot from an aspa_sta structure
+ *
+ *  Gnuplot is called. An interactive window pops up.
+ *
+ *  @param[in] sta a pointer to an aspa_sta structure
+ *  @return nothing the function is only used for its side effect
+*/
 void aspa_raster_plot_i(const aspa_sta * sta)
 {
   FILE *gp=NULL;
@@ -602,6 +610,16 @@ void aspa_raster_plot_i(const aspa_sta * sta)
   pclose(gp);
 }
 
+/** @brief Compute five number summary of a gsl_vector
+ *         as well as some other basic statistics
+ *
+ *  The [five number summary](https://en.wikipedia.org/wiki/Five-number_summary)
+ *  as well as the [median absolute deviation](https://en.wikipedia.org/wiki/Median_absolute_deviation)
+ *  (MAD), the mean and variance are computed.
+ *
+ *  @param[in] data a pointer to a `gsl_vector`
+ *  @return an `aspa_fns` structure
+*/
 aspa_fns aspa_fns_get(const gsl_vector * data)
 {
   size_t n = data->size;
@@ -626,21 +644,36 @@ aspa_fns aspa_fns_get(const gsl_vector * data)
       .median=median,.mad=mad,.var=var};
 }
 
+/** @brief Prints to stream the content of an `aspa_fns` structure
+ *
+ *  @param[in/out] `STREAM` a pointer to an open file
+ *  @param[in] `fns` an `aspa_fns` structure
+ *  @return 0 if everything goes fine
+*/
 int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns)
 {
   fprintf(STREAM,"The sample contains %d elements.\n",
 	  (int) fns->n);
-  fprintf(STREAM,"The mean and SD are   : %3g and %3g.\n",
+  fprintf(STREAM,"The mean and SD are   : %5.4f and %5.4f.\n",
 	  fns->mean, sqrt(fns->var));
-  fprintf(STREAM,"The median and MAD are: %3g and %3g.\n",
+  fprintf(STREAM,"The median and MAD are: %5.4f and %5.4f.\n",
 	  fns->median, fns->mad);
   fprintf(STREAM,"The five number summary:\n");
-  fprintf(STREAM,"Min.      1st qrt    Median    3rd qrt   Max. \n");
-  fprintf(STREAM,"%-6g %-6g  %-6g %-6g    %-6g\n",
+  fprintf(STREAM,"Min.   1st qrt Median 3rd qrt Max. \n");
+  fprintf(STREAM,"%6.4f %6.4f  %6.4f %6.4f  %6.4f\n",
 	 fns->min,fns->lowerq,fns->median,fns->upperq,fns->max);
   return 0;
 }
 
+/** @brief Computes lagged spearman correlation from a `gsl_vector`
+ *
+ *  The [Spearman rank correlation](https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient)
+ *  is just the Pearson correlation on the ranks.
+ *
+ *  @param[in] `data` a pointer to a `gsl_vector`
+ *  @param[in] lag the lag at which the correlation is computed
+ *  @return the correlation coefficient
+*/
 double aspa_lagged_spearman(const gsl_vector * data, size_t lag)
 {
   size_t n = data->size;
