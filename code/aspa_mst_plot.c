@@ -41,11 +41,11 @@ int main(int argc, char ** argv)
     aspa_cp_plot_i(sta, false, false); // cp_wt
   if (strcmp(what,good_what[3])==0)
   { // normalized counting process, cp_norm
-    if (sta->n_aggregated > 1)
+    if (sta->n_aggregated == 1)
     { // must aggregate first
       aspa_sta * asta = aspa_sta_aggregate(sta);
       aspa_cp_plot_i(asta,true,true);
-      aspa_sta_free(sta);
+      aspa_sta_free(asta);
     }
     else
     {

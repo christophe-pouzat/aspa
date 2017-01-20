@@ -34,7 +34,7 @@ int main(int argc, char ** argv)
   if (trial_duration > 0)
   { // Read flat test file with spike times one after the other
     gsl_vector * st_flat = aspa_raw_fscanf(stdin,sample2second);
-    sta = aspa_sta_from_raw(st_flat, trial_duration,
+    sta = aspa_sta_from_raw(st_flat, inter_trial_interval,
 			    stim_onset, stim_offset,
 			    trial_duration);
     gsl_vector_free(st_flat);
