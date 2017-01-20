@@ -1,3 +1,9 @@
+/** @file aspa_single.c
+ *  @brief Function definitions for single neuron spike trains
+ *
+ *  @author Christophe Pouzat <christophe.pouzat@parisdescartes.fr>
+*/
+
 #include "aspa.h"
 #define default_length 1000
 

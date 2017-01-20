@@ -1,3 +1,9 @@
+/** @file aspa_mst_aggregate.c
+ *  @brief User program for aggregating multi trial spike trains
+ *
+ *  @author Christophe Pouzat <christophe.pouzat@parisdescartes.fr>
+*/
+
 #include "aspa.h"
 
 #include <string.h>

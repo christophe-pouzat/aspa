@@ -1,3 +1,9 @@
+/** @file aspa_read_spike_train.c
+ *  @brief User program for reading spike train data
+ *
+ *  @author Christophe Pouzat <christophe.pouzat@parisdescartes.fr>
+*/
+
 #include "aspa.h"
 
 #include <string.h>

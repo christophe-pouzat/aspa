@@ -1,3 +1,9 @@
+/** @file aspa_mst_fns.c
+ *  @brief User program for printing five number summaries together
+ *         with a few extra-statistics for spike trains
+ *
+ *  @author Christophe Pouzat <christophe.pouzat@parisdescartes.fr>
+*/
 #include "aspa.h"
 
 #include <string.h>
