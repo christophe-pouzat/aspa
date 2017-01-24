@@ -671,12 +671,12 @@ int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns)
   return 0;
 }
 
-/** @brief Computes lagged spearman correlation from a `gsl_vector`
+/** @brief Computes lagged spearman correlation from a gsl_vector
  *
  *  The [Spearman rank correlation](https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient)
  *  is just the Pearson correlation on the ranks.
  *
- *  @param[in] `data` a pointer to a `gsl_vector`
+ *  @param[in] data a pointer to a gsl_vector
  *  @param[in] lag the lag at which the correlation is computed
  *  @return the correlation coefficient
 */
@@ -687,4 +687,45 @@ double aspa_lagged_spearman(const gsl_vector * data, size_t lag)
   gsl_vector_const_view lagged = gsl_vector_const_subvector(data,lag,n-lag);
   double work[2*(n-lag)];
   return gsl_stats_spearman(data->data,1,(&lagged.vector)->data,1,n-lag,work);
+}
+
+/** @brief Generates a lagged rank plot
+ *
+ *  The data are ranked and the rank of the (i+l)th
+ *  isi is plotted agains the rank of the ith isi,
+ *  where l is the lag.
+ *  Gnuplot is called. An interactive window pops up.
+ *
+ *  @param[in] sta a pointer to an aspa_sta structure
+ *  @param[in] lag the lag 
+ *  @return nothing the function is only used for its side effect
+*/
+void aspa_lagged_rank_plot_i(const aspa_sta * sta, size_t lag)
+{
+  gsl_vector * isi = aspa_sta_isi(sta);
+  size_t n = isi->size;
+  assert (lag < n); // make sure the lag is small enough
+  gsl_permutation * perm = gsl_permutation_alloc(n);
+  gsl_permutation * rank = gsl_permutation_alloc(n);
+  gsl_sort_vector_index(perm,isi);
+  gsl_permutation_inverse(rank,perm);
+  FILE *gp=NULL;
+  if (!gp)
+    gp = popen("gnuplot -persist","w");
+  if (!gp) {
+    printf("Couldn't open Gnuplot.\n");
+    return;
+  }
+  fprintf(gp,"set term qt; set grid; unset key\n");
+  fprintf(gp,"set xlabel 'Rank i'\n");
+  fprintf(gp,"set ylabel 'Rank i + %d'\n",(int) lag);
+  fprintf(gp," plot '-' u 1:2 with dots\n");
+  for (size_t i=0; i < n-lag-1; i++)
+    fprintf(gp,"%d %d\n", (int) rank->data[i], (int) rank->data[i+lag]);
+  fprintf(gp,"e\n");
+  fflush(gp);
+  pclose(gp);
+  gsl_permutation_free(perm);
+  gsl_permutation_free(rank);
+  gsl_vector_free(isi);
 }

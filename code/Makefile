@@ -5,7 +5,7 @@ LDLIBS = `pkg-config --libs gsl `
 
 $(P): $(OBJECTS)
 
-all : libaspa.a
+all : libaspa.a aspa_read_spike_train aspa_mst_fns aspa_mst_aggregate aspa_mst_plot
 
 libaspa.a : aspa_single.o
 	ar cr libaspa.a aspa_single.o
