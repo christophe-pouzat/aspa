@@ -56,7 +56,7 @@ This "spike train" contains in fact the result of 30 consecutive continuous acqu
 
 In is not expected that the data (spike trains) one wants to work with will be obtained in any standard format. That means that a usually slightly "painful" work will be required (but that's always the case when dealing with actual data) to read the data and reformat them in the text (or binary) format used by `aspa`. Looking at the source code of `aspa_read_spike_train` is the way to proceed (more specifically, look at the code of `aspa_raw_fscanf` that is called by `aspa_read_spike_train` and that is found in `aspa_single.c`). 
 
-The data we just loaded are collections of spike times in "sample times"--the time unit is therefore not the second but 1/15000 second--with one spike time per line. This can be seen by calling first the `head` function (showing by default the first ten lines of the file):
+The data we just downloaded are collections of spike times in "sample times"--the time unit is therefore not the second but 1/15000 second--with one spike time per line. This can be seen by calling first the `head` function (showing by default the first ten lines of the file):
 
 ~~~{#head-locust20010214_Spontaneous_1_tetB_u1.txt .bash}
 head locust20010214_Spontaneous_1_tetB_u1.txt
