@@ -225,7 +225,7 @@ aspa_sta * aspa_sta_from_raw(gsl_vector * raw, double inter_trial_interval, doub
  *  @param[in/out] stream a pointer to an opened text file
  *  @param[in] sta pointer to the aspa_sta structure to be written
  *  @param[in] flat boolean indicator controlling what is written
- *  @return 0 if successful  
+ *  @returns0 if successful  
 */
 int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
 {
@@ -278,7 +278,7 @@ int aspa_sta_fprintf(FILE * stream, const aspa_sta * sta, bool flat)
  *  \# End of trial:  
  *
  *  @param[in/out] stream a pointer to an opened text file
- *  @return a pointer to an allocated aspa_sta structure
+ *  @returnsa pointer to an allocated aspa_sta structure
 */
 aspa_sta * aspa_sta_fscanf(FILE * STREAM)
 {
@@ -353,7 +353,7 @@ size_t aspa_sta_n_spikes(const aspa_sta * sta)
 /** @brief Returns means number of spikes per second
  *
  *  @aparam[in] sta a pointer to an aspa_sta structure
- *  @return the mean spike rate
+ *  @returnsthe mean spike rate
 */
 double aspa_sta_rate(const aspa_sta * sta)
 {
@@ -368,7 +368,7 @@ double aspa_sta_rate(const aspa_sta * sta)
  *  the other.
  *
  *  @param[in] sta a pointer to an apsa_sta structure
- *  @return a pointer to a gsl_vector with the ISI
+ *  @returnsa pointer to a gsl_vector with the ISI
 */
 gsl_vector * aspa_sta_isi(const aspa_sta * sta)
 {
@@ -405,7 +405,7 @@ gsl_vector * aspa_sta_isi(const aspa_sta * sta)
  *  @param[in/out] stream a pointer to an opened text file
  *  @param[in] sta pointer to the aspa_sta structure to be written
  *  @param[in] flat boolean indicator controlling what is written
- *  @return 0 if successful  
+ *  @returns0 if successful  
 */
 int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
 {
@@ -454,7 +454,7 @@ int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
  *  trial (size_t) followed by the within trials spike times.
  *
  *  @param[in/out] stream a pointer to an opened text file
- *  @return a pointer to an allocated aspa_sta structure
+ *  @returnsa pointer to an allocated aspa_sta structure
 */
 aspa_sta * aspa_sta_fread(FILE * STREAM)
 {
@@ -487,7 +487,7 @@ aspa_sta * aspa_sta_fread(FILE * STREAM)
 /** @brief Aggregates many trials of a spike train
  *
  *  @param[in] sta pointer to the aspa_sta to aggregate
- *  @return a pointer to new "aggregated" aspa_sta if everyhing goes fine.
+ *  @returnsa pointer to new "aggregated" aspa_sta if everyhing goes fine.
 */
 aspa_sta * aspa_sta_aggregate(const aspa_sta * sta)
 {
@@ -528,7 +528,7 @@ aspa_sta * aspa_sta_aggregate(const aspa_sta * sta)
  *             time is used
  *  @param[in] normalized boolean controlling if the mean OCP is
  *             is displayed 
- *  @return nothing the function is only used for its side effect
+ *  @returnsnothing the function is only used for its side effect
 */
 void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
 {
@@ -584,12 +584,64 @@ void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
   pclose(gp);
 }
 
+/** @brief Writes the observed counting process assiociated with
+ *         an aspa_sta structure to a file in gnuplot friendly format
+ *
+ *  The "observed counting process" (OCP) of an aspa_sta structure can
+ *  be built in several ways: 
+ *   - If the process is not aggregated the counts vs real time can
+ *   be displayed (a single OCP is then shown). (param flat -> true)
+ *   - If the process is not aggregated the counts vs within trial
+ *   time can be displayed (as many OCP as trials are then shown).
+ *   - If the process as been aggregated the mean OCP where the 
+ *   count increase due to each spike is 1 / number_of_trials can
+ *   be displayed (param normalized -> true).
+ *
+ *  @param[in/out] STREAM an open file
+ *  @param[in] sta a pointer to the sta structure
+ *  @param[in] flat boolean controlling if actual or within trial
+ *             time is used
+ *  @param[in] normalized boolean controlling if the mean OCP is
+ *             is displayed 
+ *  @returns0 if everything goes fine
+*/
+int aspa_cp_plot_g(FILE * STREAM, const aspa_sta * sta, bool flat, bool normalized)
+{
+  if (normalized == true || flat == true) {
+    double step = 1.0/sta->n_aggregated;
+    double s_idx = step;
+    for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+    {
+      gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+      double start_time = aspa_sta_get_st_start(sta,t_idx);
+      for (size_t i=0; i < st->size; i++)
+      {
+	fprintf(STREAM,"%g %g\n", gsl_vector_get(st,i)+start_time, s_idx);
+	s_idx+=step;
+      }
+    }
+  } else {
+    for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+    {
+      int s_idx = 1;
+      gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+      for (size_t i=0; i < st->size; i++)
+      {
+	fprintf(STREAM,"%g %d\n", gsl_vector_get(st,i), (int) s_idx);
+	s_idx++;
+      }
+      fprintf(STREAM,"\n\n");
+    }
+  }
+  return 0;
+}
+
 /** @brief Generates a raster plot from an aspa_sta structure
  *
  *  Gnuplot is called. An interactive window pops up.
  *
  *  @param[in] sta a pointer to an aspa_sta structure
- *  @return nothing the function is only used for its side effect
+ *  @returns nothing the function is only used for its side effect
 */
 void aspa_raster_plot_i(const aspa_sta * sta)
 {
@@ -616,6 +668,25 @@ void aspa_raster_plot_i(const aspa_sta * sta)
   pclose(gp);
 }
 
+/** @brief Writes a raster plot from an aspa_sta structure
+ *         to a file in a gnuplot friendly format
+ *
+ *  @param[in/out] STREAM an open file
+ *  @param[in] sta a pointer to an aspa_sta structure
+ *  @returns 0 if everything goes fine
+*/
+int aspa_raster_plot_g(FILE * STREAM, const aspa_sta * sta)
+{
+  for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
+  {
+    gsl_vector * st = aspa_sta_get_st(sta,t_idx);
+    for (size_t i=0; i < st->size; i++)
+      fprintf(STREAM,"%g %d\n", gsl_vector_get(st,i), (int) t_idx+1);
+    fprintf(STREAM,"\n\n");
+  }
+  return 0;
+}
+
 /** @brief Compute five number summary of a gsl_vector
  *         as well as some other basic statistics
  *
@@ -624,7 +695,7 @@ void aspa_raster_plot_i(const aspa_sta * sta)
  *  (MAD), the mean and variance are computed.
  *
  *  @param[in] data a pointer to a `gsl_vector`
- *  @return an `aspa_fns` structure
+ *  @returnsan `aspa_fns` structure
 */
 aspa_fns aspa_fns_get(const gsl_vector * data)
 {
@@ -654,7 +725,7 @@ aspa_fns aspa_fns_get(const gsl_vector * data)
  *
  *  @param[in/out] `STREAM` a pointer to an open file
  *  @param[in] `fns` an `aspa_fns` structure
- *  @return 0 if everything goes fine
+ *  @returns0 if everything goes fine
 */
 int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns)
 {
@@ -678,7 +749,7 @@ int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns)
  *
  *  @param[in] data a pointer to a gsl_vector
  *  @param[in] lag the lag at which the correlation is computed
- *  @return the correlation coefficient
+ *  @returnsthe correlation coefficient
 */
 double aspa_lagged_spearman(const gsl_vector * data, size_t lag)
 {
@@ -698,7 +769,7 @@ double aspa_lagged_spearman(const gsl_vector * data, size_t lag)
  *
  *  @param[in] sta a pointer to an aspa_sta structure
  *  @param[in] lag the lag 
- *  @return nothing the function is only used for its side effect
+ *  @returns nothing the function is only used for its side effect
 */
 void aspa_lagged_rank_plot_i(const aspa_sta * sta, size_t lag)
 {

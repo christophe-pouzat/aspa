@@ -74,7 +74,11 @@ aspa_sta * aspa_sta_aggregate(const aspa_sta * sta);
 
 void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized);
 
+int aspa_cp_plot_g(FILE * STREAM, const aspa_sta * sta, bool flat, bool normalized);
+
 void aspa_raster_plot_i(const aspa_sta * sta);
+
+int aspa_raster_plot_g(FILE * STREAM, const aspa_sta * sta);
 
 /** Structure holding basic sample summary statistics
 */

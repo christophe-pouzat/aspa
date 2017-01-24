@@ -17,15 +17,16 @@ char * good_what[] = {"raster",
 
 int read_args(int argc, char ** argv,
 	      size_t * in_bin,
-	      char * what);
+	      char * what,
+	      size_t * text);
 
 void print_usage();
 
 int main(int argc, char ** argv)
 {
-  size_t in_bin;
+  size_t in_bin, text;
   char what[8];
-  int status = read_args(argc,argv,&in_bin,what);
+  int status = read_args(argc,argv,&in_bin,what,&text);
   if (status == -1) exit (EXIT_FAILURE);
   aspa_sta * sta;
   if (in_bin == 0)
@@ -33,25 +34,50 @@ int main(int argc, char ** argv)
   else
     sta = aspa_sta_fread(stdin);
 
-  if (strcmp(what,good_what[0])==0)
-    aspa_raster_plot_i(sta); // raster plot
-  if (strcmp(what,good_what[1])==0)
-    aspa_cp_plot_i(sta, true, false); // cp_rt
-  if (strcmp(what,good_what[2])==0)
-    aspa_cp_plot_i(sta, false, false); // cp_wt
-  if (strcmp(what,good_what[3])==0)
-  { // normalized counting process, cp_norm
-    if (sta->n_aggregated == 1)
-    { // must aggregate first
-      aspa_sta * asta = aspa_sta_aggregate(sta);
-      aspa_cp_plot_i(asta,true,true);
-      aspa_sta_free(asta);
+  if (text == 0)
+  { // Interactive use of gnuplot
+    if (strcmp(what,good_what[0])==0)
+      aspa_raster_plot_i(sta); // raster plot
+    if (strcmp(what,good_what[1])==0)
+      aspa_cp_plot_i(sta, true, false); // cp_rt
+    if (strcmp(what,good_what[2])==0)
+      aspa_cp_plot_i(sta, false, false); // cp_wt
+    if (strcmp(what,good_what[3])==0)
+    { // normalized counting process, cp_norm
+      if (sta->n_aggregated == 1)
+      { // must aggregate first
+	aspa_sta * asta = aspa_sta_aggregate(sta);
+	aspa_cp_plot_i(asta,true,true);
+	aspa_sta_free(asta);
+      }
+      else
+      {
+	aspa_cp_plot_i(sta,true,true);
+      }
     }
-    else
-    {
-      aspa_cp_plot_i(sta,true,true);
+  }
+  else
+  { // Print to stdout
+    if (strcmp(what,good_what[0])==0)
+      aspa_raster_plot_g(stdout,sta); // raster plot
+    if (strcmp(what,good_what[1])==0)
+      aspa_cp_plot_g(stdout,sta, true, false); // cp_rt
+    if (strcmp(what,good_what[2])==0)
+      aspa_cp_plot_g(stdout,sta, false, false); // cp_wt
+    if (strcmp(what,good_what[3])==0)
+    { // normalized counting process, cp_norm
+      if (sta->n_aggregated == 1)
+      { // must aggregate first
+	aspa_sta * asta = aspa_sta_aggregate(sta);
+	aspa_cp_plot_g(stdout,asta,true,true);
+	aspa_sta_free(asta);
+      }
+      else
+      {
+	aspa_cp_plot_g(stdout,sta,true,true);
+      }
     }
-  } 
+  }
   aspa_sta_free(sta);
   return 0;
 }
@@ -63,24 +89,28 @@ int main(int argc, char ** argv)
  *  @param[out] in_bin input format, O for "txt" 1 for "bin" (default 0)
  *  @param[out] what the type of plot, one of:
  *              "raster", "cp_rt", "cp_wt", "cp_norm"
- *  @return 0 when everything goes fine
+ *  @param[out] text output, O for interactive window 1 for "text" (default 0)
+ *  @returns 0 when everything goes fine
 */
 int read_args(int argc, char ** argv,
 	      size_t * in_bin,
-	      char * what)
+	      char * what,
+	      size_t * text)
 {
   // Define default values
   *in_bin=0;
+  *text=0;
   strcpy(what,"cp_rt");
   {int opt;
     static struct option long_options[] = {
       {"in_bin",no_argument,NULL,'i'},
+      {"text",no_argument,NULL,'t'},
       {"what",optional_argument,NULL,'w'},
       {"help",no_argument,NULL,'h'},
       {NULL,0,NULL,0}
     };
     int long_index =0;
-    while ((opt = getopt_long(argc,argv,"hiw:",long_options,\
+    while ((opt = getopt_long(argc,argv,"hitw:",long_options,\
 			      &long_index)) != -1) {
       switch(opt) {
       case 'w':
@@ -101,6 +131,8 @@ int read_args(int argc, char ** argv,
       break;
       case 'i': *in_bin=1;
 	break;
+      case 't': *text=1;
+	break;
       case 'h': print_usage();
 	return -1;
       default : print_usage();
@@ -118,6 +150,7 @@ void print_usage()
 {
   printf("Usage: \n"
 	 "  --in_bin: specify binary data input\n"
+	 "  --text: specify text output\n"
 	 "  --what <string>: one of 'raster', 'cp_rt', 'cp_wt',\n"
 	 "  'cp_norm', the type of plot (see bellow)\n"
 	 "\n"

@@ -1,107 +1,743 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta http-equiv="Content-Style-Type" content="text/css" />
-  <meta name="generator" content="pandoc" />
-  <meta name="author" content="Christophe Pouzat" />
-  <title>Analyse des séquences de potentiels d'action tutorial</title>
-  <style type="text/css">code{white-space: pre;}</style>
-  <style type="text/css">
-div.sourceCode { overflow-x: auto; }
-table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
-  margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; }
-td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
-td.sourceCode { padding-left: 5px; }
-code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code > span.dt { color: #902000; } /* DataType */
-code > span.dv { color: #40a070; } /* DecVal */
-code > span.bn { color: #40a070; } /* BaseN */
-code > span.fl { color: #40a070; } /* Float */
-code > span.ch { color: #4070a0; } /* Char */
-code > span.st { color: #4070a0; } /* String */
-code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code > span.ot { color: #007020; } /* Other */
-code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code > span.fu { color: #06287e; } /* Function */
-code > span.er { color: #ff0000; font-weight: bold; } /* Error */
-code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-code > span.cn { color: #880000; } /* Constant */
-code > span.sc { color: #4070a0; } /* SpecialChar */
-code > span.vs { color: #4070a0; } /* VerbatimString */
-code > span.ss { color: #bb6688; } /* SpecialString */
-code > span.im { } /* Import */
-code > span.va { color: #19177c; } /* Variable */
-code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code > span.op { color: #666666; } /* Operator */
-code > span.bu { } /* BuiltIn */
-code > span.ex { } /* Extension */
-code > span.pp { color: #bc7a00; } /* Preprocessor */
-code > span.at { color: #7d9029; } /* Attribute */
-code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-  </style>
+<!-- 2017-01-24 mar. 17:04 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title><i>Analyse des séquences de potentiels d'action</i> Tutorial</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Christophe Pouzat" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center;
+             margin-bottom: .2em; }
+  .subtitle { text-align: center;
+              font-size: medium;
+              font-weight: bold;
+              margin-top:0; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { font-family: monospace; color: green; }
+  .priority { font-family: monospace; color: orange; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .org-right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .org-left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .org-center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  /* Languages per Org manual */
+  pre.src-asymptote:before { content: 'Asymptote'; }
+  pre.src-awk:before { content: 'Awk'; }
+  pre.src-C:before { content: 'C'; }
+  /* pre.src-C++ doesn't work in CSS */
+  pre.src-clojure:before { content: 'Clojure'; }
+  pre.src-css:before { content: 'CSS'; }
+  pre.src-D:before { content: 'D'; }
+  pre.src-ditaa:before { content: 'ditaa'; }
+  pre.src-dot:before { content: 'Graphviz'; }
+  pre.src-calc:before { content: 'Emacs Calc'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-fortran:before { content: 'Fortran'; }
+  pre.src-gnuplot:before { content: 'gnuplot'; }
+  pre.src-haskell:before { content: 'Haskell'; }
+  pre.src-java:before { content: 'Java'; }
+  pre.src-js:before { content: 'Javascript'; }
+  pre.src-latex:before { content: 'LaTeX'; }
+  pre.src-ledger:before { content: 'Ledger'; }
+  pre.src-lisp:before { content: 'Lisp'; }
+  pre.src-lilypond:before { content: 'Lilypond'; }
+  pre.src-lua:before { content: 'Lua'; }
+  pre.src-matlab:before { content: 'MATLAB'; }
+  pre.src-mscgen:before { content: 'Mscgen'; }
+  pre.src-ocaml:before { content: 'Objective Caml'; }
+  pre.src-octave:before { content: 'Octave'; }
+  pre.src-org:before { content: 'Org mode'; }
+  pre.src-oz:before { content: 'OZ'; }
+  pre.src-plantuml:before { content: 'Plantuml'; }
+  pre.src-processing:before { content: 'Processing.js'; }
+  pre.src-python:before { content: 'Python'; }
+  pre.src-R:before { content: 'R'; }
+  pre.src-ruby:before { content: 'Ruby'; }
+  pre.src-sass:before { content: 'Sass'; }
+  pre.src-scheme:before { content: 'Scheme'; }
+  pre.src-screen:before { content: 'Gnu Screen'; }
+  pre.src-sed:before { content: 'Sed'; }
+  pre.src-sh:before { content: 'shell'; }
+  pre.src-sql:before { content: 'SQL'; }
+  pre.src-sqlite:before { content: 'SQLite'; }
+  /* additional languages in org.el's org-babel-load-languages alist */
+  pre.src-forth:before { content: 'Forth'; }
+  pre.src-io:before { content: 'IO'; }
+  pre.src-J:before { content: 'J'; }
+  pre.src-makefile:before { content: 'Makefile'; }
+  pre.src-maxima:before { content: 'Maxima'; }
+  pre.src-perl:before { content: 'Perl'; }
+  pre.src-picolisp:before { content: 'Pico Lisp'; }
+  pre.src-scala:before { content: 'Scala'; }
+  pre.src-shell:before { content: 'Shell Script'; }
+  pre.src-ebnf2ps:before { content: 'ebfn2ps'; }
+  /* additional language identifiers per "defun org-babel-execute"
+       in ob-*.el */
+  pre.src-cpp:before  { content: 'C++'; }
+  pre.src-abc:before  { content: 'ABC'; }
+  pre.src-coq:before  { content: 'Coq'; }
+  pre.src-groovy:before  { content: 'Groovy'; }
+  /* additional language identifiers from org-babel-shell-names in
+     ob-shell.el: ob-shell is the only babel language using a lambda to put
+     the execution function name together. */
+  pre.src-bash:before  { content: 'bash'; }
+  pre.src-csh:before  { content: 'csh'; }
+  pre.src-ash:before  { content: 'ash'; }
+  pre.src-dash:before  { content: 'dash'; }
+  pre.src-ksh:before  { content: 'ksh'; }
+  pre.src-mksh:before  { content: 'mksh'; }
+  pre.src-posh:before  { content: 'posh'; }
+  /* Additional Emacs modes also supported by the LaTeX listings package */
+  pre.src-ada:before { content: 'Ada'; }
+  pre.src-asm:before { content: 'Assembler'; }
+  pre.src-caml:before { content: 'Caml'; }
+  pre.src-delphi:before { content: 'Delphi'; }
+  pre.src-html:before { content: 'HTML'; }
+  pre.src-idl:before { content: 'IDL'; }
+  pre.src-mercury:before { content: 'Mercury'; }
+  pre.src-metapost:before { content: 'MetaPost'; }
+  pre.src-modula-2:before { content: 'Modula-2'; }
+  pre.src-pascal:before { content: 'Pascal'; }
+  pre.src-ps:before { content: 'PostScript'; }
+  pre.src-prolog:before { content: 'Prolog'; }
+  pre.src-simula:before { content: 'Simula'; }
+  pre.src-tcl:before { content: 'tcl'; }
+  pre.src-tex:before { content: 'TeX'; }
+  pre.src-plain-tex:before { content: 'Plain TeX'; }
+  pre.src-verilog:before { content: 'Verilog'; }
+  pre.src-vhdl:before { content: 'VHDL'; }
+  pre.src-xml:before { content: 'XML'; }
+  pre.src-nxml:before { content: 'XML'; }
+  /* add a generic configuration mode; LaTeX export needs an additional
+     (add-to-list 'org-latex-listings-langs '(conf " ")) in .emacs */
+  pre.src-conf:before { content: 'Configuration File'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.org-right  { text-align: center;  }
+  th.org-left   { text-align: center;   }
+  th.org-center { text-align: center; }
+  td.org-right  { text-align: right;  }
+  td.org-left   { text-align: left;   }
+  td.org-center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara { display: inline; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  .org-svg { width: 90%; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script type="text/javascript"
+        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
 </head>
 <body>
-<div id="header">
-<h1 class="title"><em>Analyse des séquences de potentiels d'action</em> tutorial</h1>
-<h2 class="author">Christophe Pouzat</h2>
+<div id="content">
+<h1 class="title"><i>Analyse des séquences de potentiels d'action</i> Tutorial</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#the-idea-motivating-this-development">1. The idea motivating this development</a></li>
+<li><a href="#required-software">2. Required software</a>
+<ul>
+<li><a href="#getting-and-compiling-the-code">2.1. Getting and compiling the code</a></li>
+</ul>
+</li>
+<li><a href="#data-used">3. Data used</a>
+<ul>
+<li><a href="#getting-a-spike-train">3.1. Getting a spike train</a></li>
+</ul>
+</li>
+<li><a href="#preliminary-analysis">4. Preliminary analysis</a>
+<ul>
+<li><a href="#reading-the-data">4.1. Reading the data</a></li>
+<li><a href="#basic-statistics">4.2. Basic statistics</a></li>
+<li><a href="#basic-plots">4.3. Basic plots</a>
+<ul>
+<li><a href="#orgcdb322b">4.3.1. Raster plot</a></li>
+<li><a href="#orgfec1316">4.3.2. A fancy trick</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 </div>
-<h1 id="required-software">Required software</h1>
-<p>The code will be written mostly in <code>C</code>. If you want a clear and quick introduction to this language, check Ben Klemens: <a href="http://modelingwithdata.org/about_the_book.html">Modeling With Data</a>. To compile the code you will need a <code>C</code> compiler like <a href="https://gcc.gnu.org/">gcc</a>. If you are using <code>Linux</code> or <code>MacOS</code> it's in a package from your favorite distribution, if you are using <code>Windows</code> you will have to install <a href="https://cygwin.com/index.html">Cygwin</a>. The heavy computational work is going to be performed mainly by the <a href="http://www.gnu.org/software/gsl/">gsl</a> (the <em>GNU Scientific Library</em>) that is easily installed through your package manager (from now on, for windows users, the &quot;package manager&quot; refers to the one of <code>Cygwin</code>). The graphs will be generated with <a href="http://www.gnuplot.info/">gnuplot</a>.</p>
-<h1 id="data-used">Data used</h1>
-<p>We are going to use spike trains obtained from the antennal lobe--first olfactory relay--of locust, <em>Schistocerca americana</em>. These spike trains can be found on the <a href="https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/">zenodo-locust-datasets-analysis</a> GitHub repository. You can also find there a complete description of the sorting procedure used to go from the raw data, that are available on <a href="https://zenodo.org/record/21589">zenodo</a>, to the spike trains. We will mostly use the spike trains from experiment <code>locust20010214</code> that can be found at the following address: <a href="https://github.com/christophe-pouzat/zenodo-locust-datasets-analysis/tree/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains" class="uri">https://github.com/christophe-pouzat/zenodo-locust-datasets-analysis/tree/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains</a>.</p>
-<h2 id="getting-a-spike-train">Getting a spike train</h2>
-<p>We will start by downloading the spike train from unit 1 from <code>group</code> <code>Spontaneous_1</code>. This is done by typing in the shell:</p>
-<div class="sourceCode" id="download-locust20010214_Spontaneous_1_tetB_u1"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">wget</span> https://raw.githubusercontent.com/christophe-pouzat/\
+</div>
+
+<div id="outline-container-org7355877" class="outline-2">
+<h2 id="the-idea-motivating-this-development"><a id="org7355877"></a><span class="section-number-2">1</span> The idea motivating this development</h2>
+<div class="outline-text-2" id="text-the-idea-motivating-this-development">
+<p>
+The idea here is to implement the Unix/Linux "philosophy"&#x2013;as exposed
+for instance in the article of Arnold Robbins
+<a href="http://www.linuxjournal.com/article/2762"><i>What's GNU</i></a>&#x2013;to the
+analysis of neuronal spike trains. Since spike trains make not too
+voluminous data, they can be stored as text files (ASCII) and most
+operations on them can be designed as "filters", that is programs
+(usually but not always written in <code>C</code>) that read their input in text
+format from the "standard input" (<code>stdin</code>) and send their result in text
+format to the "standard output" (<code>stdout</code>). For graphical displays, we
+are going to use <a href="http://gnuplot.info/">gnuplot</a>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgbb6f591" class="outline-2">
+<h2 id="required-software"><a id="orgbb6f591"></a><span class="section-number-2">2</span> Required software</h2>
+<div class="outline-text-2" id="text-required-software">
+<p>
+The code will be written mostly in <code>C</code>. If you want a clear and quick
+introduction to this language, check Ben Klemens:
+<a href="http://modelingwithdata.org/about_the_book.html">Modeling With Data</a>.
+To compile the code you will need a <code>C</code> compiler like
+<a href="https://gcc.gnu.org/">gcc</a>. If you are using <code>Linux</code> or <code>MacOS</code> it's
+in a package from your favorite distribution, if you are using <code>Windows</code>
+you will have to install <a href="https://cygwin.com/index.html">Cygwin</a>. The
+heavy computational work is going to be performed mainly by the
+<a href="http://www.gnu.org/software/gsl/">gsl</a> (the <i>GNU Scientific Library</i>)
+that is easily installed through your package manager (from now on, for
+windows users, the "package manager" refers to the one of <code>Cygwin</code>). The
+graphs will be generated with <a href="http://www.gnuplot.info/">gnuplot</a>.
+Windows user who want to use the interactive plotting capabilities of
+the library (recommended) will also have to install
+<a href="http://x.cygwin.com/"><code>Cygwin/X</code></a>.
+</p>
+</div>
+
+<div id="outline-container-org6018262" class="outline-3">
+<h3 id="getting-and-compiling-the-code"><a id="org6018262"></a><span class="section-number-3">2.1</span> Getting and compiling the code</h3>
+<div class="outline-text-3" id="text-getting-and-compiling-the-code">
+<p>
+The code is hosted on
+<a href="https://github.com/christophe-pouzat/aspa"><code>GitHub</code></a>. The easiest is
+to clone or download the repository (there is a button for that on the
+GitHub page). Once you have the repository on your hard drive, go to the
+code sub-directory and type:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">make all
+</pre>
+</div>
+
+<p>
+This will compile the library <code>libaspa.a</code> as well as a bunch of user
+programs all starting with <code>aspa_</code>, like <code>aspa_read_spike_train</code>. As
+mentioned previously, you need the <code>gsl</code> to be installed in order to
+compile the code.
+</p>
+
+<p>
+Once the compilation is done you should move the user programs to one of
+the directories listed on your <code>PATH</code>, that is on one of the directories
+appearing when you type:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">echo $PATH
+</pre>
+</div>
+
+<p>
+After that, you're in business.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc2cdedd" class="outline-2">
+<h2 id="data-used"><a id="orgc2cdedd"></a><span class="section-number-2">3</span> Data used</h2>
+<div class="outline-text-2" id="text-data-used">
+<p>
+We are going to use spike trains obtained from the antennal lobe&#x2013;first
+olfactory relay&#x2013;of locust, <i>Schistocerca americana</i>. These spike trains
+can be found on the
+<a href="https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/">zenodo-locust-datasets-analysis</a>
+GitHub repository. You can also find there a complete description of the
+sorting procedure used to go from the raw data, that are available on
+<a href="https://zenodo.org/record/21589">zenodo</a>, to the spike trains. We
+will mostly use the spike trains from experiment <code>locust20010214</code> that
+can be found at the following address:
+<a href="https://github.com/christophe-pouzat/zenodo-locust-datasets-analysis/tree/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains">https://github.com/christophe-pouzat/zenodo-locust-datasets-analysis/tree/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains</a>.
+</p>
+</div>
+
+<div id="outline-container-org0de981a" class="outline-3">
+<h3 id="getting-a-spike-train"><a id="org0de981a"></a><span class="section-number-3">3.1</span> Getting a spike train</h3>
+<div class="outline-text-3" id="text-getting-a-spike-train">
+<p>
+We will start by downloading the spike train from unit 1 from <code>group</code>
+<code>Spontaneous_1</code>. This is done by typing in the shell (I'm using the
+"line continuation character, " to fit my lines on a single page of the
+<code>PDF</code> version of this document, when typing directly to the shell you
+don't need these line breaks):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">wget https://raw.githubusercontent.com/christophe-pouzat/\
 zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
 locust20010214/locust20010214_spike_trains/\
-locust20010214_Spontaneous_1_tetB_u1.txt</code></pre></div>
-<p>This &quot;spike train&quot; contains in fact the result of 30 consecutive continuous acquisitions, each 29 s long with a 1 s gap in between, as is made clear in the <a href="https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/Locust_Analysis_with_R/locust20010214/Sorting_20010214_tetB.html">detailed sorting description</a> of this data set.</p>
-<h2 id="making-the-observed-counting-process-plot">Making the &quot;observed counting process&quot; plot</h2>
-<p>We first get a gnuplot script, <code>aspa_ocp.gp</code>, from the github repository:</p>
-<div class="sourceCode" id="download-aspa_ocp.gp"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">wget</span> https://raw.githubusercontent.com/christophe-pouzat/\
-aspa/master/gnuplot/aspa_ocp.gp</code></pre></div>
-<p>We then get a graph showing the observed counting process associated with the train by typing in the shell:</p>
-<div class="sourceCode" id="locust20010214_Spontaneous_1_tetB_u1"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">cat</span> aspa_ocp.gp locust20010214_Spontaneous_1_tetB_u1.txt <span class="kw">|</span> <span class="kw">\</span>
-<span class="ex">gnuplot</span> -persist</code></pre></div>
-<div class="figure">
-<img src="locust20010214_Spontaneous_1_tetB_u1_ocp.png" alt="The observed counting process associted with locust20010214_Spontaneous_1_tetB_u1.txt spike train" style="width:70.0%" />
-<p class="caption">The observed counting process associted with <code>locust20010214_Spontaneous_1_tetB_u1.txt</code> spike train</p>
+locust20010214_Spontaneous_1_tetB_u1.txt
+</pre>
 </div>
-<p>Notice the two &quot;long&quot; horizontal sections, thess are due to the presence of recording noise during trials 11 and 21 (these trials were skipped during spike sorting).</p>
-<h1 id="c-code"><code>C</code> code</h1>
-<h2 id="first-test">First test</h2>
-<p>To test that everything is properly set, we start by downloading the <code>Makefile</code></p>
-<div class="sourceCode" id="download-Makefile"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">wget</span> https://raw.githubusercontent.com/christophe-pouzat/\
-aspa/master/code/Makefile</code></pre></div>
-<p>as well as the header file <code>aspa.h</code> and the two <code>C</code> source files, <code>aspa_single.c</code> and <code>aspa_single_test.c</code>:</p>
-<div class="sourceCode" id="download-c-source"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">wget</span> https://raw.githubusercontent.com/christophe-pouzat/\
-aspa/master/code/aspa.h
-<span class="fu">wget</span> https://raw.githubusercontent.com/christophe-pouzat/\
-aspa/master/code/aspa_single.c
-<span class="fu">wget</span> https://raw.githubusercontent.com/christophe-pouzat/\
-aspa/master/code/aspa_single_test.c</code></pre></div>
-<p>We can then compile the test file (<code>aspa_single_test.c</code>) with:</p>
-<div class="sourceCode" id="compile-aspa_single_test"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">make</span> aspa_single_test</code></pre></div>
-<p>And we run it on the spike train we downloaded previously with:</p>
-<div class="sourceCode" id="run-aspa_single_test"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">cat</span> locust20010214_Spontaneous_1_tetB_u1.txt <span class="kw">|</span> <span class="kw">\</span>
-<span class="ex">aspa_single_test</span></code></pre></div>
-<p>We should see the number of spikes (3331), the time of the first spike (0.290975 s), the time of the last one (898.15 s) printed followed by a bunch of statistics concerning the inter spike intervals (<code>isi</code>) distribution.</p>
-<p>Notice that I've assumed here that the current directory is on your executable path, if not you can either add to the path with:</p>
-<div class="sourceCode" id="add-current-directory-to-path"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="bu">export</span> <span class="va">PATH=</span>.:<span class="va">$PATH</span></code></pre></div>
-<p>or use:</p>
-<div class="sourceCode" id="run-aspa_single_test2"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">cat</span> locust20010214_Spontaneous_1_tetB_u1.txt <span class="kw">|</span> <span class="kw">\</span>
-<span class="ex">./aspa_single_test</span></code></pre></div>
-<h2 id="checking-memory-leaks">Checking memory leaks</h2>
-<p>One of the big advantages of <code>C</code> is that it let's you do efficient memory management; but this advantage comes at a cost: you have to do the memory management yourself meaning among other things that you should free the memory you allocate. A nice tool for checking that a code does actually free everything it allocates is the <a href="http://valgrind.org/">Valgrind</a> program. Once we have installed it, we can use it with:</p>
-<div class="sourceCode" id="run-aspa_single_test-with-valgrind"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">valgrind</span> --leak-check=yes cat locust20010214_Spontaneous_1_tetB_u1.txt \
-<span class="kw">|</span> <span class="ex">aspa_single_test</span></code></pre></div>
-<h2 id="checking-that-there-is-no-major-mistake">Checking that there is no major mistake</h2>
-<p>We can give a regular sequence (with one spike every second, using the <code>seq</code> function) and see what it gives with (the spike times are entered here in sample points assuming a sampling rate of 15 kHz and a recording duration of 60 seconds):</p>
-<div class="sourceCode" id="run-aspa_single_test-on-regular-sequence"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="fu">seq</span> 1 15000 900000 <span class="kw">|</span> <span class="ex">aspa_single_test</span></code></pre></div>
+
+<p>
+This "spike train" contains in fact the result of 30 consecutive
+continuous acquisitions, each 29 s long with a 1 s gap in between, as is
+made clear in the
+<a href="https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/Locust_Analysis_with_R/locust20010214/Sorting_20010214_tetB.html">detailed
+sorting description</a> of this data set.
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org17bb58e" class="outline-2">
+<h2 id="preliminary-analysis"><a id="org17bb58e"></a><span class="section-number-2">4</span> Preliminary analysis</h2>
+<div class="outline-text-2" id="text-preliminary-analysis">
+</div>
+
+<div id="outline-container-orgaf543ec" class="outline-3">
+<h3 id="reading-the-data"><a id="orgaf543ec"></a><span class="section-number-3">4.1</span> Reading the data</h3>
+<div class="outline-text-3" id="text-reading-the-data">
+<p>
+In is not expected that the data (spike trains) one wants to work with
+will be obtained in any standard format. That means that a usually
+slightly "painful" work will be required (but that's always the case
+when dealing with actual data) to read the data and reformat them in the
+text (or binary) format used by <code>aspa</code>. Looking at the source code of
+<code>aspa_read_spike_train</code> is the way to proceed (more specifically, look
+at the code of <code>aspa_raw_fscanf</code> that is called by
+<code>aspa_read_spike_train</code> and that is found in <code>aspa_single.c</code>).
+</p>
+
+<p>
+The data we just downloaded are collections of spike times in "sample
+times"&#x2013;the time unit is therefore not the second but 1/15000
+second&#x2013;with one spike time per line. This can be seen by calling first
+the <code>head</code> function (showing by default the first ten lines of the
+file):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">head locust20010214_Spontaneous_1_tetB_u1.txt
+</pre>
+</div>
+
+<pre class="example">
+4364.629
+49876.8
+50529.95
+50988.26
+51371.66
+51769.29
+52703.77
+54772.34
+56472.7
+71766.51
+</pre>
+
+<p>
+Calling =tail=shows the last lines of the file (by default the last ten
+lines):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">tail locust20010214_Spontaneous_1_tetB_u1.txt
+</pre>
+</div>
+
+<pre class="example">
+13442792
+13455679
+13458610
+13460049
+13460517
+13461154
+13464139
+13470059
+13471539
+13472243
+</pre>
+
+<p>
+Function <code>aspa_read_spike_train</code> will read these times from the <code>stdin</code>
+and output them in a "nice" format (still a text file by default) to the
+<code>stdout</code>. You can get a description to arguments accepted by the
+function by calling it with the <code>--help</code> argument:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_read_spike_train --help
+</pre>
+</div>
+
+<p>
+That will give you:
+</p>
+
+<pre class="example">
+Usage: 
+  --in_bin: specify binary data input
+  --out_bin: specify binary data output
+  --sample2second &lt;positive real&gt;: the factor by which times
+  in input data are divided in order get spike times in seconds
+  used only when reading 'raw' data (default 15000)
+  --inter_trial_interval &lt;positive real&gt;: the inter trial
+  interval (in s) used only when reading 'raw' data
+  --trial_duration &lt;positive real&gt;: the recorded duration
+  (in s) of each trial used only when reading 'raw' data
+  --stim_onset &lt;real&gt;: the stimulus onset time
+  (in s) if that makes sense, used only when reading 'raw' data
+  --stim_offset &lt;real&gt;: the stimulus offset time
+  (in s) if that makes sense, used only when reading 'raw' data
+</pre>
+
+<p>
+For demonstration we can call it on the data file we just downloaded\linebreak
+(<code>locust20010214_Spontaneous_1_tetB_u1.txt</code>), writing the result into a
+new text file <code>locust20010214_Spontaneous_1_tetB_u1.aspa</code> for further
+inspection:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+locust20010214_Spontaneous_1_tetB_u1.txt &gt; \
+locust20010214_Spontaneous_1_tetB_u1.aspa
+</pre>
+</div>
+
+<p>
+We can then look at the first 25 lines of our new file with:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">head -n 25 locust20010214_Spontaneous_1_tetB_u1.aspa
+</pre>
+</div>
+
+<pre class="example">
+# Number of trials: 28
+# Number of aggregated trials: 1
+# Stimulus onset: 0 (s)
+# Stimulus offset: 0 (s)
+# Single trial duration: 29 (s)
+
+
+# Start of trial: 0
+# Trial start time: 0 (s)
+# Number of spikes: 94
+0.290975
+3.32512
+3.36866
+3.39922
+3.42478
+3.45129
+3.51358
+3.65149
+3.76485
+4.78443
+5.06381
+5.11507
+5.24077
+5.28448
+5.31933
+</pre>
+
+<p>
+We see that the "non-data" element are on lines starting with a "#"
+character. The "head" of the file specifies how many trial are in the
+file and gives some other information. The data from trial 0 (we start
+counting at 0) com next after two blank lines. To see the whole file
+interactively you can type:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">less locust20010214_Spontaneous_1_tetB_u1.aspa
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5fc1e24" class="outline-3">
+<h3 id="basic-statistics"><a id="org5fc1e24"></a><span class="section-number-3">4.2</span> Basic statistics</h3>
+<div class="outline-text-3" id="text-basic-statistics">
+<p>
+Program <code>aspa_mst_fns</code> (<code>mst</code> stands for "multiple spike trains" and
+<code>fns</code> for "<a href="https://en.wikipedia.org/wiki/Five-number_summary">Five-number summary</a>") return elementary statics related to a spike train data set.
+A description of its use is obtained by calling the program with the <code>--help</code> argument:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_mst_fns --help
+</pre>
+</div>
+
+<pre class="example">
+Usage: 
+  --in_bin: specify binary data input
+
+Returns five number summary and additional stats.
+</pre>
+
+<p>
+We can call this function directly on the output of <code>aspa_read_spike_train</code> using a <a href="http://www.linfo.org/pipe.html">pipe</a> with:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+locust20010214_Spontaneous_1_tetB_u1.txt | \
+aspa_mst_fns
+</pre>
+</div>
+
+<pre class="example">
+Data from 28 trials.
+The mean rate is: 4.10222 Hz.
+The inter spike interval statistics are:
+The sample contains 3303 elements.
+The mean and SD are   : 0.2333 and 0.4660.
+The median and MAD are: 0.0546 and 0.0359.
+The five number summary:
+Min.   1st qrt Median 3rd qrt Max. 
+0.0157 0.0369  0.0546 0.1491  4.5264
+A 95% confidence interval for the lag 1 Spearman rank correlation is: [0.400336,0.443483].
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgdeaca50" class="outline-3">
+<h3 id="basic-plots"><a id="orgdeaca50"></a><span class="section-number-3">4.3</span> Basic plots</h3>
+<div class="outline-text-3" id="text-basic-plots">
+<p>
+There are several plots one might want to create at an early stage of spike train data analysis. Since these plots are more "attractive" when built from data with a response to a stimulus, we will start by getting one such case (from the same experiment and same neuron):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">wget https://raw.githubusercontent.com/christophe-pouzat/\
+zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
+locust20010214/locust20010214_spike_trains/\
+locust20010214_C3H_1_tetB_u1.txt
+</pre>
+</div>
+
+<p>
+This file contains the responses to 25 stimulations with <code>cis-3-hexen-1-ol</code>. The classical way of displaying such data is the <code>raster plot</code>. This plot as well as several over ones we will shortly see is generated by calling <code>aspa_mst_plot</code>. As usual, calling the function with argument <code>--help</code> gives us a basic explanation on how to use it:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_mst_plot --help
+</pre>
+</div>
+
+<pre class="example">
+Usage: 
+  --in_bin: specify binary data input
+  --text: specify text output
+  --what &lt;string&gt;: one of 'raster', 'cp_rt', 'cp_wt',
+  'cp_norm', the type of plot (see bellow)
+
+An interactive lot is generated.
+If what is set to 'raster' a raster plot is generated.
+If what is set to 'cp_rt' the observed counting process
+in 'real' time is generated, that is trial appear one after
+the other.
+If what is set to 'cp_wt' the observed counting processes
+corresponding to each trial are shown on the 'within trial time.
+If what is set to 'cp_norm' the normalized aggregated counting
+process is displayed (normalization means here that the step size
+due to each spike in each trial is 1/number of trials; in a sense
+the 'mean' counting process is displayed).
+</pre>
+</div>
+
+<div id="outline-container-orgcdb322b" class="outline-4">
+<h4 id="orgcdb322b"><span class="section-number-4">4.3.1</span> Raster plot</h4>
+<div class="outline-text-4" id="text-4-3-1">
+<p>
+Here, to get the classical raster we do:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=raster
+</pre>
+</div>
+
+<p>
+This will make a new window appear with a plot similar to the one we will now construct after calling the function with an additional argument:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=raster --text &gt; \
+locust20010214_C3H_1_tetB_u1.raster
+</pre>
+</div>
+
+<p>
+Here instead of the "new window output" we generated at text output (that's what the <code>--text</code> argument means) sent to the <code>stdout</code> and redirected this <code>stdout</code> to a file called <code>locust20010214_C3H_1_tetB_u1.raster</code>. We can now build "by hand" with <code>gnuplot</code> the same figure as the one we directly got (we have now more control on the output):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-gnuplot">set grid
+unset key
+set xlabel 'Time (s)'
+set ylabel 'Trial'
+plot 'locust20010214_C3H_1_tetB_u1.raster' using 1:2 with dots
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="fig/locust20010214_C3H_1_tetB_u1_raster.png" alt="locust20010214_C3H_1_tetB_u1_raster.png" />
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgfec1316" class="outline-4">
+<h4 id="orgfec1316"><span class="section-number-4">4.3.2</span> A fancy trick</h4>
+<div class="outline-text-4" id="text-4-3-2">
+<p>
+We can also make the raster plot and get the basic stats printed at once with the <a href="https://www.gnu.org/software/coreutils/manual/html_node/tee-invocation.html">tee</a> command as follows:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+locust20010214_C3H_1_tetB_u1.txt | tee &gt;(aspa_mst_plot --what=raster) | \
+aspa_mst_fns
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Christophe Pouzat</p>
+<p class="date">Created: 2017-01-24 mar. 17:04</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
 </body>
 </html>
