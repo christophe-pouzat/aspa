@@ -1,0 +1,17 @@
+#!python
+env = Environment()
+env.ParseConfig(['pkg-config --cflags gsl','pkg-config --libs gsl'])
+env.Append(CCFLAGS = ['-g','-O0','-Wall','-std=gnu11'])
+env.StaticLibrary(target="aspa",source=["aspa_single.c"])
+env.Program(target="aspa_read_spike_train",
+            source="aspa_read_spike_train.c",
+            LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
+env.Program(target="aspa_mst_fns",
+            source="aspa_mst_fns.c",
+            LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
+env.Program(target="aspa_mst_aggregate",
+            source="aspa_mst_aggregate.c",
+            LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
+env.Program(target="aspa_mst_plot",
+            source="aspa_mst_plot.c",
+            LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
