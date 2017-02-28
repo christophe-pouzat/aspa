@@ -91,6 +91,8 @@ Windows user who want to use the interactive plotting capabilities of
 the library (recommended) will also have to install
 [[http://x.cygwin.com/][=Cygwin/X=]].
 
+For now the compilation requires either =make or [[http://scons.org/][Scons]].
+
 ** Getting and compiling the code
    :PROPERTIES:
    :CUSTOM_ID: getting-and-compiling-the-code
@@ -100,11 +102,17 @@ The code is hosted on
 [[https://github.com/christophe-pouzat/aspa][=GitHub=]]. The easiest is
 to clone or download the repository (there is a button for that on the
 GitHub page). Once you have the repository on your hard drive, go to the
-code sub-directory and type:
+code sub-directory and, if using =make=, type:
 
 #+BEGIN_SRC shell :eval no-export
 make all
 #+END_SRC
+
+or with =SCons=:
+
+#+BEGIN_SRC shell :eval no-export
+scons -Q
+#+END_SRC 
 
 This will compile the library =libaspa.a= as well as a bunch of user
 programs all starting with =aspa_=, like =aspa_read_spike_train=. As
@@ -203,7 +211,7 @@ head locust20010214_Spontaneous_1_tetB_u1.txt
 71766.51
 #+END_EXAMPLE
 
-Calling =tail=shows the last lines of the file (by default the last ten
+Calling =tail= shows the last lines of the file (by default the last ten
 lines):
 
 #+BEGIN_SRC shell :eval no-export
@@ -338,12 +346,12 @@ aspa_mst_fns
 Data from 28 trials.
 The mean rate is: 4.10222 Hz.
 The inter spike interval statistics are:
-The sample contains 3303 elements.
-The mean and SD are   : 0.2333 and 0.4660.
-The median and MAD are: 0.0546 and 0.0359.
+  The sample contains 3303 elements.
+  The mean and SD are   : 0.2333 and 0.4660.
+  The median and MAD are: 0.0546 and 0.0359.
 The five number summary:
-Min.   1st qrt Median 3rd qrt Max. 
-0.0157 0.0369  0.0546 0.1491  4.5264
+  Min.   1st qrt Median 3rd qrt Max. 
+  0.0157 0.0369  0.0546 0.1491  4.5264
 A 95% confidence interval for the lag 1 Spearman rank correlation is: [0.400336,0.443483].
 #+END_EXAMPLE
 
@@ -397,7 +405,7 @@ locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=raster
 #+END_SRC
 
-This will make a new window appear with a plot similar to the one we will now construct after calling the function with an additional argument:
+This will make a new window appear with a plot similar to the one we will now construct after calling the function with an additional argument (you can type =q= to kill the plot window):
 
 #+BEGIN_SRC shell :eval never
 aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
@@ -429,3 +437,97 @@ aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
 locust20010214_C3H_1_tetB_u1.txt | tee >(aspa_mst_plot --what=raster) | \
 aspa_mst_fns
 #+END_SRC
+
+*** Counting process plot
+
+There are several ways to create a "counting process" plot. The first one, used mainly for checking data stationarity is building the "true" observed counting process plot, that is at each spike time the step function jumps by one unit and successive trials are shown one after the other as they /actually/ occurred. This is what is specified with argument =cp_rt= to option =what=:
+
+#+BEGIN_SRC shell :eval no-export
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=cp_rt
+#+END_SRC
+
+Giving a plot looking like:
+
+#+BEGIN_SRC shell :eval never :exports none
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=cp_rt --text > \
+locust20010214_C3H_1_tetB_u1.cp_rt
+#+END_SRC
+
+#+HEADERS: :file fig/locust20010214_C3H_1_tetB_u1_cp_rt.png  
+#+BEGIN_SRC gnuplot :exports results :session *gnuplot* :eval no-export
+set grid
+unset key
+set xlabel 'Time (s)'
+set title 'Observed counting process'
+set ylabel 'Events count'
+plot 'locust20010214_C3H_1_tetB_u1.cp_rt' using 1:2 with steps
+#+END_SRC
+
+#+RESULTS:
+[[file:fig/locust20010214_C3H_1_tetB_u1_cp_rt.png]]
+
+We might also want to look at the individual observed counting processes after realigning them on the stimulus onset. This is obtained with argument =cp_wt= to option =what=:
+
+#+BEGIN_SRC shell :eval no-export
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=cp_wt
+#+END_SRC
+
+resulting in a plot looking like:
+
+#+BEGIN_SRC shell :eval no-export :exports none
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=cp_wt --text > \
+locust20010214_C3H_1_tetB_u1.cp_wt
+#+END_SRC
+
+#+HEADERS: :file fig/locust20010214_C3H_1_tetB_u1_cp_wt.png  
+#+BEGIN_SRC gnuplot :exports results :session *gnuplot* :eval no-export
+set grid
+unset key
+set xlabel 'Time (s)'
+set title 'Observed counting processes'
+set ylabel 'Events count'
+plot 'locust20010214_C3H_1_tetB_u1.cp_wt' using 1:2 with steps
+#+END_SRC
+
+#+RESULTS:
+[[file:fig/locust20010214_C3H_1_tetB_u1_cp_wt.png]]
+
+We can also decide that to see if there is a response or not, we can construct the average step function. That is, we replace the step size in the previous plot by 1/N (N is the number of trials) and we sum all these resulting step functions. This is done with argument =cp_norm= to option =what=:
+
+#+BEGIN_SRC shell :eval no-export
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 < \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=cp_norm
+#+END_SRC
+
+resulting in a plot looking like:
+
+#+BEGIN_SRC shell :eval no-export :exports none
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 < \
+locust20010214_C3H_1_tetB_u1.txt | \
+aspa_mst_plot --what=cp_norm --text > \
+locust20010214_C3H_1_tetB_u1.cp_norm
+#+END_SRC
+
+#+HEADERS: :file fig/locust20010214_C3H_1_tetB_u1_cp_norm.png  
+#+BEGIN_SRC gnuplot :exports results :session *gnuplot* :eval no-export
+set grid
+unset key
+set xlabel 'Time (s)'
+set title 'Observed mean counting process'
+set ylabel 'Mean events count'
+plot 'locust20010214_C3H_1_tetB_u1.cp_norm' using 1:2 with steps
+#+END_SRC
+
+#+RESULTS:
+[[file:fig/locust20010214_C3H_1_tetB_u1_cp_norm.png]]

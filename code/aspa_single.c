@@ -729,15 +729,15 @@ aspa_fns aspa_fns_get(const gsl_vector * data)
 */
 int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns)
 {
-  fprintf(STREAM,"The sample contains %d elements.\n",
+  fprintf(STREAM,"  The sample contains %d elements.\n",
 	  (int) fns->n);
-  fprintf(STREAM,"The mean and SD are   : %5.4f and %5.4f.\n",
+  fprintf(STREAM,"  The mean and SD are   : %5.4f and %5.4f.\n",
 	  fns->mean, sqrt(fns->var));
-  fprintf(STREAM,"The median and MAD are: %5.4f and %5.4f.\n",
+  fprintf(STREAM,"  The median and MAD are: %5.4f and %5.4f.\n",
 	  fns->median, fns->mad);
   fprintf(STREAM,"The five number summary:\n");
-  fprintf(STREAM,"Min.   1st qrt Median 3rd qrt Max. \n");
-  fprintf(STREAM,"%6.4f %6.4f  %6.4f %6.4f  %6.4f\n",
+  fprintf(STREAM,"  Min.   1st qrt Median 3rd qrt Max. \n");
+  fprintf(STREAM,"  %6.4f %6.4f  %6.4f %6.4f  %6.4f\n",
 	 fns->min,fns->lowerq,fns->median,fns->upperq,fns->max);
   return 0;
 }
