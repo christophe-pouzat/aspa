@@ -62,6 +62,8 @@ aspa_sta * aspa_sta_fscanf(FILE * STREAM);
 
 size_t aspa_sta_n_spikes(const aspa_sta * sta);
 
+size_t aspa_sta_n_spikes_max(const aspa_sta * sta);
+
 double aspa_sta_rate(const aspa_sta * sta);
 
 gsl_vector * aspa_sta_isi(const aspa_sta * sta);

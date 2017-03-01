@@ -350,6 +350,30 @@ size_t aspa_sta_n_spikes(const aspa_sta * sta)
   return n_total;
 }
 
+/** @brief Returns the largest number of spikes contained in 
+ *         the trials of an aspa_sta structure
+ *
+ *  @param[in] sta a pointer to an aspa_sta structure
+ *  @result the maximal number of spikes
+*/
+size_t aspa_sta_n_spikes_max(const aspa_sta * sta)
+{
+  gsl_vector * st = aspa_sta_get_st(sta,0);
+  size_t n_total = st->size;
+  if (sta->n_trials > 1)
+  {
+    for (size_t t_idx=1; t_idx < sta->n_trials; t_idx++)
+    {
+      st = aspa_sta_get_st(sta,t_idx);
+      if (st->size > n_total)
+      {
+	n_total = st->size;
+      }
+    }
+  }
+  return n_total;
+}
+
 /** @brief Returns means number of spikes per second
  *
  *  @aparam[in] sta a pointer to an aspa_sta structure
@@ -539,18 +563,21 @@ void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
     printf("Couldn't open Gnuplot.\n");
     return;
   }
-  fprintf(gp,"set term qt; set grid; unset key\n");
-  fprintf(gp,"set xlabel 'Time (s)'\n");
+  // We use an heredocs here since in the general case we want to
+  // show several data sets (see Janert pp 251-252).
+  fprintf(gp,"$d << EOD\n");
+  if (sta->onset < sta->offset)
+  {
+    double n_max = aspa_sta_n_spikes_max(sta);
+    if (normalized == true)
+      n_max /= sta->n_aggregated;
+    fprintf(gp,"%g %g\n", sta->onset, 0.0);
+    fprintf(gp,"%g %g\n", sta->onset, n_max);
+    fprintf(gp,"%g %g\n", sta->offset, n_max);
+    fprintf(gp,"%g %g\n", sta->offset, 0.0);
+    fprintf(gp,"\n\n");
+  }
   if (normalized == true || flat == true) {
-    if (flat == true)
-    {
-      fprintf(gp,"set title 'Observed counting process'\n");
-      fprintf(gp,"set ylabel 'Events count'\n");
-    } else {
-      fprintf(gp,"set title 'Observed mean counting process'\n");
-      fprintf(gp,"set ylabel 'Mean events count'\n");
-    }
-    fprintf(gp," plot '-' u 1:2 with steps\n");
     double step = 1.0/sta->n_aggregated;
     double s_idx = step;
     for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
@@ -564,9 +591,6 @@ void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
       }
     }
   } else {
-    fprintf(gp,"set title 'Observed counting processes'\n");
-    fprintf(gp,"set ylabel 'Events count'\n");
-    fprintf(gp," plot '-' u 1:2 with steps\n");
     for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
     {
       int s_idx = 1;
@@ -579,7 +603,42 @@ void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
       fprintf(gp,"\n\n");
     }
   }
-  fprintf(gp,"e\n");
+  fprintf(gp,"EOD\n\n");
+  fprintf(gp,"set term qt; set grid; unset key\n");
+  fprintf(gp,"set xlabel 'Time (s)'\n");
+  if (normalized == true || flat == true) {
+    if (flat == true)
+    {
+      fprintf(gp,"set title 'Observed counting process'\n");
+      fprintf(gp,"set ylabel 'Events count'\n");
+      if (sta->onset < sta->offset)
+	fprintf(gp," plot $d index 1:%d using 1:2 with steps lc 'black'\n",(int) sta->n_trials);
+      else
+	fprintf(gp," plot $d using 1:2 with steps lc 'black'\n");
+    } else {
+      fprintf(gp,"set title 'Observed mean counting process'\n");
+      fprintf(gp,"set ylabel 'Mean events count'\n");
+      double n_max = aspa_sta_n_spikes_max(sta)/sta->n_aggregated;
+      if (sta->onset < sta->offset)
+      fprintf(gp," plot [0:%g] [0:%g] $d index 0 using 1:2 with filledcurve closed lc 'grey',"
+	      "$d index 1:%d using 1:2 with steps lc 'black'\n",
+	      sta->trial_duration, n_max, (int) sta->n_trials);
+      else
+	fprintf(gp," plot [0:%g] [0:%g] $d using 1:2 with steps lc 'black'\n",
+		sta->trial_duration, n_max);
+    }
+  } else {
+    fprintf(gp,"set title 'Observed counting processes'\n");
+    fprintf(gp,"set ylabel 'Events count'\n");
+    int n_max = aspa_sta_n_spikes_max(sta);
+    if (sta->onset < sta->offset)
+      fprintf(gp," plot [0:%g] [0:%d] $d index 0 using 1:2 with filledcurve closed lc 'grey',"
+	      "$d index 1:%d using 1:2 with steps lc 'black'\n",
+	      sta->trial_duration, n_max, (int) sta->n_trials);
+      else
+	fprintf(gp," plot [0:%g] [0:%d] $d using 1:2 with steps lc 'black'\n",
+		sta->trial_duration, n_max);
+  }
   fflush(gp);
   pclose(gp);
 }
@@ -607,6 +666,20 @@ void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
 */
 int aspa_cp_plot_g(FILE * STREAM, const aspa_sta * sta, bool flat, bool normalized)
 {
+  if ((sta->onset < sta->offset) && (flat == false))
+  { // The stimulus timing is specified
+    double n_max = aspa_sta_n_spikes_max(sta);
+    if (normalized == true)
+    {
+      n_max /= sta->n_aggregated;
+    }
+    fprintf(STREAM,"%g %g\n", sta->onset, 0.0);
+    fprintf(STREAM,"%g %g\n", sta->onset, n_max);
+    fprintf(STREAM,"%g %g\n", sta->offset, n_max);
+    fprintf(STREAM,"%g %g\n", sta->offset, 0.0);
+    fprintf(STREAM,"\n\n");
+  }
+  
   if (normalized == true || flat == true) {
     double step = 1.0/sta->n_aggregated;
     double s_idx = step;
@@ -652,10 +725,17 @@ void aspa_raster_plot_i(const aspa_sta * sta)
     printf("Couldn't open Gnuplot.\n");
     return;
   }
-  fprintf(gp,"set term qt; set grid; unset key\n");
-  fprintf(gp,"set xlabel 'Time (s)'\n");
-  fprintf(gp,"set ylabel 'Trial'\n");
-  fprintf(gp," plot '-' u 1:2 with dots\n");
+  // We use an heredocs here since in the general case we want to
+  // show several data sets (see Janert pp 251-252).
+  fprintf(gp,"$d << EOD\n");
+  if (sta->onset < sta->offset)
+  {
+    fprintf(gp,"%g %d\n", sta->onset, 0);
+    fprintf(gp,"%g %d\n", sta->onset, (int) sta->n_trials+1);
+    fprintf(gp,"%g %d\n", sta->offset, (int) sta->n_trials+1);
+    fprintf(gp,"%g %d\n", sta->offset, 0);
+    fprintf(gp,"\n\n");
+  }
   for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
   {
     gsl_vector * st = aspa_sta_get_st(sta,t_idx);
@@ -663,7 +743,21 @@ void aspa_raster_plot_i(const aspa_sta * sta)
       fprintf(gp,"%g %d\n", gsl_vector_get(st,i), (int) t_idx+1);
     fprintf(gp,"\n\n");
   }
-  fprintf(gp,"e\n");
+  fprintf(gp,"EOD\n\n");
+  fprintf(gp,"set term qt; set grid; unset key\n");
+  fprintf(gp,"set xlabel 'Time (s)'\n");
+  fprintf(gp,"set ylabel 'Trial'\n");
+  if (sta->onset < sta->offset)
+  {
+    fprintf(gp," plot [0:%g] [0:%d] $d index 0 using 1:2 with filledcurve closed lc 'grey',"
+	    "$d index 1:%d using 1:2 with dots lc 'black'\n",
+	    sta->trial_duration, (int) sta->n_trials+1, (int) sta->n_trials);
+  }
+  else
+  {
+    fprintf(gp," plot [0:%g] [0:%d] $d using 1:2 with dots lc 'black'\n",
+	    sta->trial_duration, (int) sta->n_trials+1);
+  }
   fflush(gp);
   pclose(gp);
 }
@@ -677,6 +771,14 @@ void aspa_raster_plot_i(const aspa_sta * sta)
 */
 int aspa_raster_plot_g(FILE * STREAM, const aspa_sta * sta)
 {
+  if (sta->onset < sta->offset)
+  { // The stimulus timing is specified
+    fprintf(STREAM,"%g %d\n", sta->onset, 0);
+    fprintf(STREAM,"%g %d\n", sta->onset, (int) sta->n_trials+1);
+    fprintf(STREAM,"%g %d\n", sta->offset, (int) sta->n_trials+1);
+    fprintf(STREAM,"%g %d\n", sta->offset, 0);
+    fprintf(STREAM,"\n\n");
+  }
   for (size_t t_idx=0; t_idx < sta->n_trials; t_idx++)
   {
     gsl_vector * st = aspa_sta_get_st(sta,t_idx);

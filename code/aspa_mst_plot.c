@@ -69,7 +69,7 @@ int main(int argc, char ** argv)
       if (sta->n_aggregated == 1)
       { // must aggregate first
 	aspa_sta * asta = aspa_sta_aggregate(sta);
-	aspa_cp_plot_g(stdout,asta,true,true);
+	aspa_cp_plot_g(stdout,asta,false,true);
 	aspa_sta_free(asta);
       }
       else
