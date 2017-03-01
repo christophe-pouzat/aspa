@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2017-02-28 mar. 14:45 -->
+<!-- 2017-03-01 mer. 16:34 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><i>Analyse des séquences de potentiels d'action</i> Tutorial</title>
@@ -272,9 +272,9 @@ for the JavaScript code in this tag.
 <li><a href="#basic-statistics">4.2. Basic statistics</a></li>
 <li><a href="#basic-plots">4.3. Basic plots</a>
 <ul>
-<li><a href="#org32e38be">4.3.1. Raster plot</a></li>
-<li><a href="#orgcbeafdc">4.3.2. A fancy trick</a></li>
-<li><a href="#org8a07681">4.3.3. Counting process plot</a></li>
+<li><a href="#org5ef7ae1">4.3.1. Raster plot</a></li>
+<li><a href="#org9e6d77f">4.3.2. A fancy trick</a></li>
+<li><a href="#org7cb31df">4.3.3. Counting process plot</a></li>
 </ul>
 </li>
 </ul>
@@ -283,8 +283,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-org1a43c7e" class="outline-2">
-<h2 id="the-idea-motivating-this-development"><a id="org1a43c7e"></a><span class="section-number-2">1</span> The idea motivating this development</h2>
+<div id="outline-container-orgdc73f80" class="outline-2">
+<h2 id="the-idea-motivating-this-development"><a id="orgdc73f80"></a><span class="section-number-2">1</span> The idea motivating this development</h2>
 <div class="outline-text-2" id="text-the-idea-motivating-this-development">
 <p>
 The idea here is to implement the Unix/Linux "philosophy"&#x2013;as exposed
@@ -301,8 +301,8 @@ are going to use <a href="http://gnuplot.info/">gnuplot</a>.
 </div>
 </div>
 
-<div id="outline-container-orgd9cb1be" class="outline-2">
-<h2 id="required-software"><a id="orgd9cb1be"></a><span class="section-number-2">2</span> Required software</h2>
+<div id="outline-container-org9494561" class="outline-2">
+<h2 id="required-software"><a id="org9494561"></a><span class="section-number-2">2</span> Required software</h2>
 <div class="outline-text-2" id="text-required-software">
 <p>
 The code will be written mostly in <code>C</code>. If you want a clear and quick
@@ -327,8 +327,8 @@ For now the compilation requires either =make or <a href="http://scons.org/">Sco
 </p>
 </div>
 
-<div id="outline-container-org9cfebdc" class="outline-3">
-<h3 id="getting-and-compiling-the-code"><a id="org9cfebdc"></a><span class="section-number-3">2.1</span> Getting and compiling the code</h3>
+<div id="outline-container-org965220d" class="outline-3">
+<h3 id="getting-and-compiling-the-code"><a id="org965220d"></a><span class="section-number-3">2.1</span> Getting and compiling the code</h3>
 <div class="outline-text-3" id="text-getting-and-compiling-the-code">
 <p>
 The code is hosted on
@@ -377,8 +377,8 @@ After that, you're in business.
 </div>
 </div>
 
-<div id="outline-container-orgcdfead4" class="outline-2">
-<h2 id="data-used"><a id="orgcdfead4"></a><span class="section-number-2">3</span> Data used</h2>
+<div id="outline-container-orge611e8b" class="outline-2">
+<h2 id="data-used"><a id="orge611e8b"></a><span class="section-number-2">3</span> Data used</h2>
 <div class="outline-text-2" id="text-data-used">
 <p>
 We are going to use spike trains obtained from the antennal lobe&#x2013;first
@@ -394,8 +394,8 @@ can be found at the following address:
 </p>
 </div>
 
-<div id="outline-container-org9fa4493" class="outline-3">
-<h3 id="getting-a-spike-train"><a id="org9fa4493"></a><span class="section-number-3">3.1</span> Getting a spike train</h3>
+<div id="outline-container-orgda64331" class="outline-3">
+<h3 id="getting-a-spike-train"><a id="orgda64331"></a><span class="section-number-3">3.1</span> Getting a spike train</h3>
 <div class="outline-text-3" id="text-getting-a-spike-train">
 <p>
 We will start by downloading the spike train from unit 1 from <code>group</code>
@@ -424,13 +424,13 @@ sorting description</a> of this data set.
 </div>
 </div>
 
-<div id="outline-container-org6ee6023" class="outline-2">
-<h2 id="preliminary-analysis"><a id="org6ee6023"></a><span class="section-number-2">4</span> Preliminary analysis</h2>
+<div id="outline-container-org9a50cd0" class="outline-2">
+<h2 id="preliminary-analysis"><a id="org9a50cd0"></a><span class="section-number-2">4</span> Preliminary analysis</h2>
 <div class="outline-text-2" id="text-preliminary-analysis">
 </div>
 
-<div id="outline-container-org020dd58" class="outline-3">
-<h3 id="reading-the-data"><a id="org020dd58"></a><span class="section-number-3">4.1</span> Reading the data</h3>
+<div id="outline-container-orgcc474b3" class="outline-3">
+<h3 id="reading-the-data"><a id="orgcc474b3"></a><span class="section-number-3">4.1</span> Reading the data</h3>
 <div class="outline-text-3" id="text-reading-the-data">
 <p>
 In is not expected that the data (spike trains) one wants to work with
@@ -591,8 +591,8 @@ interactively you can type:
 </div>
 </div>
 
-<div id="outline-container-orga59c768" class="outline-3">
-<h3 id="basic-statistics"><a id="orga59c768"></a><span class="section-number-3">4.2</span> Basic statistics</h3>
+<div id="outline-container-org7cd06ed" class="outline-3">
+<h3 id="basic-statistics"><a id="org7cd06ed"></a><span class="section-number-3">4.2</span> Basic statistics</h3>
 <div class="outline-text-3" id="text-basic-statistics">
 <p>
 Program <code>aspa_mst_fns</code> (<code>mst</code> stands for "multiple spike trains" and
@@ -638,8 +638,8 @@ A 95% confidence interval for the lag 1 Spearman rank correlation is: [0.400336,
 </div>
 </div>
 
-<div id="outline-container-orgb3a5153" class="outline-3">
-<h3 id="basic-plots"><a id="orgb3a5153"></a><span class="section-number-3">4.3</span> Basic plots</h3>
+<div id="outline-container-org104efef" class="outline-3">
+<h3 id="basic-plots"><a id="org104efef"></a><span class="section-number-3">4.3</span> Basic plots</h3>
 <div class="outline-text-3" id="text-basic-plots">
 <p>
 There are several plots one might want to create at an early stage of spike train data analysis. Since these plots are more "attractive" when built from data with a response to a stimulus, we will start by getting one such case (from the same experiment and same neuron):
@@ -683,15 +683,16 @@ the 'mean' counting process is displayed).
 </pre>
 </div>
 
-<div id="outline-container-org32e38be" class="outline-4">
-<h4 id="org32e38be"><span class="section-number-4">4.3.1</span> Raster plot</h4>
+<div id="outline-container-org5ef7ae1" class="outline-4">
+<h4 id="org5ef7ae1"><span class="section-number-4">4.3.1</span> Raster plot</h4>
 <div class="outline-text-4" id="text-4-3-1">
 <p>
 Here, to get the classical raster we do:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 &lt; \
 locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=raster
 </pre>
@@ -702,7 +703,8 @@ This will make a new window appear with a plot similar to the one we will now co
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 &lt; \
 locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=raster --text &gt; \
 locust20010214_C3H_1_tetB_u1.raster
@@ -718,7 +720,8 @@ Here instead of the "new window output" we generated at text output (that's what
 unset key
 set xlabel 'Time (s)'
 set ylabel 'Trial'
-plot 'locust20010214_C3H_1_tetB_u1.raster' using 1:2 with dots
+plot [0:30] [0:26] 'locust20010214_C3H_1_tetB_u1.raster' index 0 using 1:2 with filledcurve closed lc 'grey',\
+     '' index 1:25 using 1:2 with dots lc 'black'
 </pre>
 </div>
 
@@ -730,8 +733,8 @@ plot 'locust20010214_C3H_1_tetB_u1.raster' using 1:2 with dots
 </div>
 </div>
 
-<div id="outline-container-orgcbeafdc" class="outline-4">
-<h4 id="orgcbeafdc"><span class="section-number-4">4.3.2</span> A fancy trick</h4>
+<div id="outline-container-org9e6d77f" class="outline-4">
+<h4 id="org9e6d77f"><span class="section-number-4">4.3.2</span> A fancy trick</h4>
 <div class="outline-text-4" id="text-4-3-2">
 <p>
 We can also make the raster plot and get the basic stats printed at once with the <a href="https://www.gnu.org/software/coreutils/manual/html_node/tee-invocation.html">tee</a> command as follows:
@@ -746,15 +749,16 @@ aspa_mst_fns
 </div>
 </div>
 
-<div id="outline-container-org8a07681" class="outline-4">
-<h4 id="org8a07681"><span class="section-number-4">4.3.3</span> Counting process plot</h4>
+<div id="outline-container-org7cb31df" class="outline-4">
+<h4 id="org7cb31df"><span class="section-number-4">4.3.3</span> Counting process plot</h4>
 <div class="outline-text-4" id="text-4-3-3">
 <p>
 There are several ways to create a "counting process" plot. The first one, used mainly for checking data stationarity is building the "true" observed counting process plot, that is at each spike time the step function jumps by one unit and successive trials are shown one after the other as they <i>actually</i> occurred. This is what is specified with argument <code>cp_rt</code> to option <code>what</code>:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
+<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 &lt; \
 locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=cp_rt
 </pre>
@@ -819,7 +823,7 @@ resulting in a plot looking like:
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Christophe Pouzat</p>
-<p class="date">Created: 2017-02-28 mar. 14:45</p>
+<p class="date">Created: 2017-03-01 mer. 16:34</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

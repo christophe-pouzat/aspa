@@ -400,7 +400,8 @@ the 'mean' counting process is displayed).
 Here, to get the classical raster we do:
 
 #+BEGIN_SRC shell :eval never
-aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 < \
 locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=raster
 #+END_SRC
@@ -408,7 +409,8 @@ aspa_mst_plot --what=raster
 This will make a new window appear with a plot similar to the one we will now construct after calling the function with an additional argument (you can type =q= to kill the plot window):
 
 #+BEGIN_SRC shell :eval never
-aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 < \
 locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=raster --text > \
 locust20010214_C3H_1_tetB_u1.raster
@@ -422,7 +424,8 @@ set grid
 unset key
 set xlabel 'Time (s)'
 set ylabel 'Trial'
-plot 'locust20010214_C3H_1_tetB_u1.raster' using 1:2 with dots
+plot [0:30] [0:26] 'locust20010214_C3H_1_tetB_u1.raster' index 0 using 1:2 with filledcurve closed lc 'grey',\
+     '' index 1:25 using 1:2 with dots lc 'black'
 #+END_SRC
 
 #+RESULTS:
@@ -443,7 +446,8 @@ aspa_mst_fns
 There are several ways to create a "counting process" plot. The first one, used mainly for checking data stationarity is building the "true" observed counting process plot, that is at each spike time the step function jumps by one unit and successive trials are shown one after the other as they /actually/ occurred. This is what is specified with argument =cp_rt= to option =what=:
 
 #+BEGIN_SRC shell :eval no-export
-aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 < \
 locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=cp_rt
 #+END_SRC
@@ -464,7 +468,7 @@ unset key
 set xlabel 'Time (s)'
 set title 'Observed counting process'
 set ylabel 'Events count'
-plot 'locust20010214_C3H_1_tetB_u1.cp_rt' using 1:2 with steps
+plot 'locust20010214_C3H_1_tetB_u1.cp_rt' using 1:2 with steps lc 'black'
 #+END_SRC
 
 #+RESULTS:
@@ -481,7 +485,8 @@ aspa_mst_plot --what=cp_wt
 resulting in a plot looking like:
 
 #+BEGIN_SRC shell :eval no-export :exports none
-aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 < \
 locust20010214_C3H_1_tetB_u1.txt | \
 aspa_mst_plot --what=cp_wt --text > \
 locust20010214_C3H_1_tetB_u1.cp_wt
@@ -494,7 +499,8 @@ unset key
 set xlabel 'Time (s)'
 set title 'Observed counting processes'
 set ylabel 'Events count'
-plot 'locust20010214_C3H_1_tetB_u1.cp_wt' using 1:2 with steps
+plot [0:29] [0:245] 'locust20010214_C3H_1_tetB_u1.cp_wt' index 0 using 1:2 with filledcurve closed lc 'grey',\
+     '' index 1:25 using 1:2 with steps lc 'black'
 #+END_SRC
 
 #+RESULTS:
@@ -526,7 +532,8 @@ unset key
 set xlabel 'Time (s)'
 set title 'Observed mean counting process'
 set ylabel 'Mean events count'
-plot 'locust20010214_C3H_1_tetB_u1.cp_norm' using 1:2 with steps
+plot [0:29] [0:145] 'locust20010214_C3H_1_tetB_u1.cp_norm' index 0 using 1:2 with filledcurve closed lc 'grey',\
+     '' index 1 using 1:2 with steps lc 'black'
 #+END_SRC
 
 #+RESULTS:
