@@ -2,7 +2,7 @@
 env = Environment()
 env.ParseConfig(['pkg-config --cflags gsl','pkg-config --libs gsl'])
 env.Append(CCFLAGS = ['-g','-O0','-Wall','-std=gnu11'])
-env.StaticLibrary(target="aspa",source=["aspa_single.c"])
+env.StaticLibrary(target="aspa",source=["aspa_single.c","aspa_dist.c"])
 env.Program(target="aspa_read_spike_train",
             source="aspa_read_spike_train.c",
             LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
@@ -14,4 +14,7 @@ env.Program(target="aspa_mst_aggregate",
             LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
 env.Program(target="aspa_mst_plot",
             source="aspa_mst_plot.c",
+            LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
+env.Program(target="aspa_cdf_K_test",
+            source="aspa_cdf_K_test.c",
             LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")

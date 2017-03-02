@@ -102,3 +102,8 @@ aspa_fns aspa_fns_get(const gsl_vector * data);
 int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns);
 
 double aspa_lagged_spearman(const gsl_vector * data, size_t lag);
+
+double aspa_cdf_K(int n,double d);
+
+double aspa_Kolmogorov_D(gsl_vector * data, bool sorted);
+

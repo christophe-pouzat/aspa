@@ -377,7 +377,7 @@ size_t aspa_sta_n_spikes_max(const aspa_sta * sta)
 /** @brief Returns means number of spikes per second
  *
  *  @aparam[in] sta a pointer to an aspa_sta structure
- *  @returnsthe mean spike rate
+ *  @returns the mean spike rate
 */
 double aspa_sta_rate(const aspa_sta * sta)
 {
@@ -392,7 +392,7 @@ double aspa_sta_rate(const aspa_sta * sta)
  *  the other.
  *
  *  @param[in] sta a pointer to an apsa_sta structure
- *  @returnsa pointer to a gsl_vector with the ISI
+ *  @returns a pointer to a gsl_vector with the ISI
 */
 gsl_vector * aspa_sta_isi(const aspa_sta * sta)
 {
@@ -429,7 +429,7 @@ gsl_vector * aspa_sta_isi(const aspa_sta * sta)
  *  @param[in/out] stream a pointer to an opened text file
  *  @param[in] sta pointer to the aspa_sta structure to be written
  *  @param[in] flat boolean indicator controlling what is written
- *  @returns0 if successful  
+ *  @returns 0 if successful  
 */
 int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
 {
@@ -478,7 +478,7 @@ int aspa_sta_fwrite(FILE * stream, const aspa_sta * sta, bool flat)
  *  trial (size_t) followed by the within trials spike times.
  *
  *  @param[in/out] stream a pointer to an opened text file
- *  @returnsa pointer to an allocated aspa_sta structure
+ *  @returns a pointer to an allocated aspa_sta structure
 */
 aspa_sta * aspa_sta_fread(FILE * STREAM)
 {
@@ -511,7 +511,7 @@ aspa_sta * aspa_sta_fread(FILE * STREAM)
 /** @brief Aggregates many trials of a spike train
  *
  *  @param[in] sta pointer to the aspa_sta to aggregate
- *  @returnsa pointer to new "aggregated" aspa_sta if everyhing goes fine.
+ *  @returns a pointer to new "aggregated" aspa_sta if everyhing goes fine.
 */
 aspa_sta * aspa_sta_aggregate(const aspa_sta * sta)
 {
@@ -552,7 +552,7 @@ aspa_sta * aspa_sta_aggregate(const aspa_sta * sta)
  *             time is used
  *  @param[in] normalized boolean controlling if the mean OCP is
  *             is displayed 
- *  @returnsnothing the function is only used for its side effect
+ *  @returns nothing the function is only used for its side effect
 */
 void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
 {
@@ -662,7 +662,7 @@ void aspa_cp_plot_i(const aspa_sta * sta, bool flat, bool normalized)
  *             time is used
  *  @param[in] normalized boolean controlling if the mean OCP is
  *             is displayed 
- *  @returns0 if everything goes fine
+ *  @returns 0 if everything goes fine
 */
 int aspa_cp_plot_g(FILE * STREAM, const aspa_sta * sta, bool flat, bool normalized)
 {
@@ -851,7 +851,7 @@ int aspa_fns_fprintf(FILE * STREAM, aspa_fns * fns)
  *
  *  @param[in] data a pointer to a gsl_vector
  *  @param[in] lag the lag at which the correlation is computed
- *  @returnsthe correlation coefficient
+ *  @returns the correlation coefficient
 */
 double aspa_lagged_spearman(const gsl_vector * data, size_t lag)
 {
