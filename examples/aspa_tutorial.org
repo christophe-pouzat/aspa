@@ -424,7 +424,8 @@ set grid
 unset key
 set xlabel 'Time (s)'
 set ylabel 'Trial'
-plot [0:30] [0:26] 'locust20010214_C3H_1_tetB_u1.raster' index 0 using 1:2 with filledcurve closed lc 'grey',\
+plot [0:30] [0:26] 'locust20010214_C3H_1_tetB_u1.raster' \
+     index 0 using 1:2 with filledcurve closed lc 'grey',\
      '' index 1:25 using 1:2 with dots lc 'black'
 #+END_SRC
 
@@ -538,3 +539,39 @@ plot [0:29] [0:145] 'locust20010214_C3H_1_tetB_u1.cp_norm' index 0 using 1:2 wit
 
 #+RESULTS:
 [[file:fig/locust20010214_C3H_1_tetB_u1_cp_norm.png]]
+
+One might want to prepare a more sophisticated plot for, say, a publication showing both the individual observed counting processes and their average. This could be done as follows, by creating first some files with the "properly" formated data:
+
+#+BEGIN_SRC shell :eval no-export
+aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+--stim_onset=10 --stim_offset=11 < \
+locust20010214_C3H_1_tetB_u1.txt > \
+locust20010214_C3H_1_tetB_u1.aspa
+
+aspa_mst_plot --what=cp_norm --text < \
+locust20010214_C3H_1_tetB_u1.aspa > \
+locust20010214_C3H_1_tetB_u1.cp_norm
+
+aspa_mst_plot --what=cp_wt --text < \
+locust20010214_C3H_1_tetB_u1.aspa > \
+locust20010214_C3H_1_tetB_u1.cp_wt
+#+END_SRC
+
+Then within =gnuplot=:
+
+#+HEADERS: :file fig/locust20010214_C3H_1_tetB_u1_cp_norm_wt.png  
+#+BEGIN_SRC gnuplot :exports both :session *gnuplot* :eval no-export
+set grid
+unset key
+set xlabel 'Time (s)'
+set title 'Observed counting processes'
+set ylabel 'Events count'
+plot [0:29] [0:245] 'locust20010214_C3H_1_tetB_u1.cp_wt' \
+     index 0 using 1:2 with filledcurve closed lc 'grey',\
+     '' index 1:25 using 1:2 with steps lc 'black',\
+     'locust20010214_C3H_1_tetB_u1.cp_norm' index 1 \
+     using 1:2 with steps lc 'red' linewidth 2
+#+END_SRC
+
+#+RESULTS:
+[[file:fig/locust20010214_C3H_1_tetB_u1_cp_norm_wt.png]]
