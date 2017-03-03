@@ -18,3 +18,6 @@ env.Program(target="aspa_mst_plot",
 env.Program(target="aspa_cdf_K_test",
             source="aspa_cdf_K_test.c",
             LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")
+env.Program(target="aspa_cdf_norm_test",
+            source="aspa_cdf_norm_test.c",
+            LIBS=["aspa","gsl","gslcblas","m"],LIBPATH=".")

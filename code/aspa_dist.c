@@ -131,7 +131,7 @@ double aspa_cdf_K(int n,double d)
   return s;
 }
 
-/** @brief Return the (two-sided) Kolmogorov statistics
+/** @brief Returns the (two-sided) Kolmogorov statistics
  *
  *  The data are contained in the `gsl_vector` pointed to
  *  by `data`. If the content is not sorted (`sorted==false`)
@@ -170,4 +170,54 @@ double aspa_Kolmogorov_D(gsl_vector * data, bool sorted)
   if (sorted == false)
     gsl_vector_free(data_s);
   return D;
+}
+
+
+/** @brief Returns the standard normal distribution function Prod{X <= x}
+ *
+ *  Code `Phi` of G. Marsaglia [J.Stat.Software. 11(4): 1-11](https://www.jstatsoft.org/article/view/v011i04).
+ *  
+ *  @param[in] x a double the observec value
+ *  @results Prod{X <= x} where X is N(0,1)
+*/
+double aspa_cdf_norm_P(double x)
+{
+  long double s=x,t=0,b=x,q=x*x,i=1;
+  while(s!=t)
+    s=(t=s)+(b*=q/(i+=2));
+  return .5+s*exp(-.5*q-.91893853320467274178L);
+}
+
+
+/** @brief Returns the complementary standard normal distribution function Prod{X > x}
+ *
+ *  Code `cPhi` of G. Marsaglia [J.Stat.Software. 11(4): 1-11](https://www.jstatsoft.org/article/view/v011i04).
+ *  
+ *  @param[in] x a double the observec value
+ *  @results Prod{X > x} where X is N(0,1)
+*/
+double aspa_cdf_norm_Q(double x)
+{
+  long double R[9]={1.25331413731550025L,
+		    .421369229288054473L,
+		    .236652382913560671L,
+		    .162377660896867462L,
+		    .123131963257932296L,
+		    .0990285964717319214L,
+		    .0827662865013691773L,
+		    .0710695805388521071L,
+		    .0622586659950261958L};
+       int i,j=.5*(fabs(x)+1);
+       long double pwr=1,a=R[j],z=2*j,b=a*z-1,h=fabs(x)-z,s=a+h*b,t=a,q=h*h;
+       for(i=2;s!=t;i+=2)
+       {
+	 a=(a+z*b)/i;
+	 b=(b+z*a)/(i+1);
+	 pwr*=q;
+	 s=(t=s)+pwr*(a+h*b);
+       }
+       s=s*exp(-.5*x*x-.91893853320467274178L);
+       if(x>=0)
+	 return (double) s;
+       return (double) (1.-s);
 }

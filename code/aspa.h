@@ -17,6 +17,7 @@
 #include <gsl/gsl_sort.h>
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_permutation.h>
+#include <gsl/gsl_cdf.h>
 
 gsl_vector * aspa_raw_fscanf(FILE * STREAM, double sampling_frequency);
 
@@ -107,3 +108,6 @@ double aspa_cdf_K(int n,double d);
 
 double aspa_Kolmogorov_D(gsl_vector * data, bool sorted);
 
+double aspa_cdf_norm_P(double x);
+
+double aspa_cdf_norm_Q(double x);
