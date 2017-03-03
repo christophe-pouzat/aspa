@@ -221,3 +221,168 @@ double aspa_cdf_norm_Q(double x)
 	 return (double) s;
        return (double) (1.-s);
 }
+
+
+/** @brief Returns the Anderson-Darling statistics
+ *
+ *  The data are contained in the `gsl_vector` pointed to
+ *  by `data`. If the content is not sorted (`sorted==false`)
+ *  the data are first copied before being sorted.
+ *
+ *  @param[in] data pointer to a `gsl_vector` containing the data
+ *  @param[in] sorted a boolean indicated if the `data` content is
+ *             already sorted (`true`) or not (`false`)
+ *  @returns a double with the Anderson-Darling statistics
+*/
+double aspa_AndersonDarling_W2(gsl_vector * data, bool sorted)
+{
+  gsl_vector * data_s;
+  if (sorted == false)
+  {
+    data_s = gsl_vector_alloc(data->size);
+    gsl_vector_memcpy(data_s,data);
+    gsl_sort_vector(data_s);
+  }
+  else
+  {
+    data_s = data;
+  }
+  size_t n = data->size;
+  double A=0.;
+  for (size_t i=0; i<n; i++)
+  {
+    double t = gsl_vector_get(data_s,i)*(1.-gsl_vector_get(data_s,n-1-i));
+    A += (i+i+1)*log(t);
+  }
+  A *= -1./n;
+  if (sorted == false)
+    gsl_vector_free(data_s);
+  return A-(double)n;
+}
+
+/** @brief Utility function called by `aspa_cdf_ADinf_P`
+ *
+ *  Adaptation of function `ADf` of Marsaglia & Marsaglia (2004)
+ *  [J. Stat. Software 9(2): 1-5](https://www.jstatsoft.org/article/view/v009i02).
+ *
+ *  @param[in] z a double
+ *  @param[in] i an int
+ *  @returns a double
+*/
+double aspa_ADf(double z,int j)
+{ 
+  double t=(4*j+1)*(4*j+1)*1.23370055013617/z;
+  if(t>150.)
+    return 0.;
+  double a=2.22144146907918*exp(-t)/sqrt(t);
+  double b=3.93740248643060*2.*aspa_cdf_norm_Q(sqrt(2*t));
+  double r=z*.125;
+  double f=a+b*r;
+  for(size_t i=1; i<200; i++)
+  {
+    double c=((i-.5-t)*b+t*a)/i;
+    a=b;
+    b=c;
+    r*=z/(8*i+8);
+    if(fabs(r)<1e-40 || fabs(c)<1.e-40)
+      return f;
+    double fnew=f+c*r;
+    if(f==fnew)
+      return f;
+    f=fnew;
+  }
+  return f;
+}
+
+/** @brief Returns the asymptotic cdf of the Anderson-Darling
+ *         statistics
+ *
+ *  Adaptation of function `ADinf` of Marsaglia & Marsaglia (2004)
+ *  [J. Stat. Software 9(2): 1-5](https://www.jstatsoft.org/article/view/v009i02).
+ *
+ *  @param[in] z a double the observed statistics value
+ *  @returns a double Prob{W2 <= z}
+*/
+double aspa_cdf_ADinf_P(double z)
+{
+  if(z<.01)
+    return 0.; /* avoids exponent limits; ADinf(.01)=.528e-52 */
+  double r=1./z;
+  double ad=r*aspa_ADf(z,0);
+  for(size_t j=1; j<100; j++)
+  {
+    r*=(.5-j)/j;
+    double adnew=ad+(4*j+1)*r*aspa_ADf(z,j);
+    if(ad==adnew) {
+      return ad;
+    }
+    ad=adnew;
+  }
+  return ad;
+}
+
+/** @brief Short, practical version of full aspa_cdf_ADinf_P(z), z>0.
+ *
+ *  Adaptation of function `adinf` of Marsaglia & Marsaglia (2004)
+ *  [J. Stat. Software 9(2): 1-5](https://www.jstatsoft.org/article/view/v009i02).
+ *
+ *  @param[in] z a double the observed statistics value
+ *  @returns a double Prob{W2 <= z}
+*/
+double aspa_adinf(double z)
+{
+  if(z<2.)
+    return exp(-1.2337141/z)/sqrt(z)*(2.00012+(.247105-(.0649821-(.0347962-(.011672-.00168691*z)*z)*z)*z)*z);
+  /* max |error| < .000002 for z<2, (p=.90816...) */
+ return exp(-exp(1.0776-(2.30695-(.43424-(.082433-(.008056 -.0003146*z)*z)*z)*z)*z));
+ /* max |error|<.0000008 for 4<z<infinity */
+}
+
+/** @brief Corrects the error caused by using the asymptotic 
+ *         approximation, x=aspa_adinf(z).
+ *
+ *  Thus x+errfix(n,x) is uniform in [0,1) for practical purposes;
+ *  accuracy may be off at the 5th, rarely at the 4th, digit.
+ *  Adaptation of function `errfix` of Marsaglia & Marsaglia (2004)
+ *  [J. Stat. Software 9(2): 1-5](https://www.jstatsoft.org/article/view/v009i02).
+ *  @param[in] n an int
+ *  @param[in] x a double
+ *  @returns a double
+*/
+double aspa_errfix(int n, double x)
+{
+  double t;
+  if(x>.8)
+    return (-130.2137+(745.2337-(1705.091-(1950.646-(1116.360-255.7844*x)*x)*x)*x)*x)/n;
+  double c=.01265+.1757/n;
+  if(x<c)
+  {
+    t=x/c;
+    t=sqrt(t)*(1.-t)*(49*t-102);
+    return t*(.0037/(n*n)+.00078/n+.00006)/n;
+  }
+  t=(x-c)/(.8-c);
+  t=-.00022633+(6.54034-(14.6538-(14.458-(8.259-1.91864*t)*t)*t)*t)*t;
+  return t*(.04213+.01365/n)/n;
+}
+
+double aspa_cdf_AD_P(int n,double z)
+{
+  double v;
+  double x=aspa_adinf(z);
+  if(x>.8)
+  {
+    v=(-130.2137+(745.2337-(1705.091-(1950.646-(1116.360-255.7844*x)*x)*x)*x)*x)/n;
+    return x+v;
+  }
+  double c=.01265+.1757/n;
+  if(x<c)
+  {
+    v=x/c;
+    v=sqrt(v)*(1.-v)*(49*v-102);
+    return x+v*(.0037/(n*n)+.00078/n+.00006)/n;
+  }
+  v=(x-c)/(.8-c);
+  v=-.00022633+(6.54034-(14.6538-(14.458-(8.259-1.91864*v)*v)*v)*v)*v;
+  return x+v*(.04213+.01365/n)/n;
+}

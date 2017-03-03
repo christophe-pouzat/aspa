@@ -36,13 +36,13 @@ gsl_vector * aspa_raw_fscanf(FILE * STREAM, double sampling_frequency);
 */
 typedef struct
 {
-  size_t n_trials; //<! Number of trials
-  size_t n_aggregated; //<! Number of "real trials" aggregated per "trial" 
-  double onset; //<! Stimulus onset time (s)
-  double offset; //<! Stimulus offset time (s)
-  double trial_duration; //<! Single trial duration (s)
-  double * trial_start_time; //<! Vector holding the actual start time of each trial
-  gsl_vector ** st; //<! The spike trains
+  size_t n_trials; //!< Number of trials
+  size_t n_aggregated; //!< Number of "real trials" aggregated per "trial" 
+  double onset; //!< Stimulus onset time (s)
+  double offset; //!< Stimulus offset time (s)
+  double trial_duration; //!< Single trial duration (s)
+  double * trial_start_time; //!< Vector holding the actual start time of each trial
+  gsl_vector ** st; //!< The spike trains
 } aspa_sta;
 
 aspa_sta * aspa_sta_alloc(size_t n_trials, size_t n_aggregated, double onset, double offset, double trial_duration);
@@ -87,15 +87,15 @@ int aspa_raster_plot_g(FILE * STREAM, const aspa_sta * sta);
 */
 typedef struct
 {
-  size_t n; //<! sample size
-  double min; //<! sample minimum
-  double max; //<! sample maximum
-  double upperq; //<! sample upper quartile
-  double lowerq; //<! sample lower quartile
-  double mean; //<! sample mean
-  double median; //<! sample median
-  double mad; //<! sample mad
-  double var; //<! sample variance
+  size_t n; //!< sample size
+  double min; //!< sample minimum
+  double max; //!< sample maximum
+  double upperq; //!< sample upper quartile
+  double lowerq; //!< sample lower quartile
+  double mean; //!< sample mean
+  double median; //!< sample median
+  double mad; //!< sample mad
+  double var; //!< sample variance
 } aspa_fns;
 
 aspa_fns aspa_fns_get(const gsl_vector * data);
@@ -111,3 +111,14 @@ double aspa_Kolmogorov_D(gsl_vector * data, bool sorted);
 double aspa_cdf_norm_P(double x);
 
 double aspa_cdf_norm_Q(double x);
+
+double aspa_AndersonDarling_W2(gsl_vector * data, bool sorted);
+
+double aspa_cdf_ADinf_P(double z);
+
+double aspa_cdf_AD_P(int n,double z);
+
+double aspa_errfix(int n, double x);
+
+double aspa_adinf(double z);
+
