@@ -6,6 +6,7 @@
 */
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
@@ -18,6 +19,7 @@
 #include <gsl/gsl_sort_vector.h>
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_cdf.h>
+#include <gsl/gsl_sf.h>
 
 gsl_vector * aspa_raw_fscanf(FILE * STREAM, double sampling_frequency);
 
@@ -106,7 +108,9 @@ double aspa_lagged_spearman(const gsl_vector * data, size_t lag);
 
 double aspa_cdf_K(int n,double d);
 
-double aspa_Kolmogorov_D(gsl_vector * data, bool sorted);
+double aspa_cdf_Kplus(int n,double d);
+
+double aspa_Kolmogorov_D(gsl_vector * data, bool sorted, char * what);
 
 double aspa_cdf_norm_P(double x);
 
@@ -122,3 +126,4 @@ double aspa_errfix(int n, double x);
 
 double aspa_adinf(double z);
 
+int aspa_durbin_modification(const gsl_vector * seq, gsl_vector * res);

@@ -5,7 +5,6 @@
 */
 #include "aspa.h"
 
-#include <string.h>
 #include <getopt.h>
 
 #define NUM_WHAT 4

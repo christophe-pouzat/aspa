@@ -94,15 +94,14 @@ void mPower(const double *A,int eA,double *V,int *eV,int m,int n)
 */
 double aspa_cdf_K(int n,double d)
 {
-  int k,m,i,j,g,eH,eQ;
-  double h,s,*H,*Q;
-  s=d*d*n;
+  int i,j,g,eH,eQ;
+  double s=d*d*n;
   if(s>7.24||(s>3.76&&n>99)) return 1-2*exp(-(2.000071+.331/sqrt(n)+1.409/n)*s);
-  k=(int)ceil(n*d);
-  m=2*k-1;
-  h=k-n*d;
-  H=(double*)malloc((m*m)*sizeof(double));
-  Q=(double*)malloc((m*m)*sizeof(double));
+  int k=(int)ceil(n*d);
+  int m=2*k-1;
+  double h=k-n*d;
+  double *H=malloc((m*m)*sizeof(double));
+  double *Q=malloc((m*m)*sizeof(double));
   for(i=0;i<m;i++)
     for(j=0;j<m;j++)
       if(i-j+1<0) H[i*m+j]=0;
@@ -131,19 +130,56 @@ double aspa_cdf_K(int n,double d)
   return s;
 }
 
-/** @brief Returns the (two-sided) Kolmogorov statistics
+/** @brief Returns the Kolmogorov distribution function Prod{D_n_plus <= d}
+ *         or Prod{D_n_minus <= d} where D_n_plus/minus are the one sided 
+ *         Kolmogorov statistic and n the sample size
+ *
+ *  The probability is given by equation 3 of Birnbaum and Tingey (1951)
+ *  One-sided confidence contours for probability distribution functions
+ *  _The Annals of Mathematical Statistics_ __22__: 592-596.
+ *  
+ *  @param[in] n an integer, the sample size
+ *  @param[in] d a double the maximal one sided deviation
+ *  @results Prod{D_n_plus/minus <= d}
+*/
+double aspa_cdf_Kplus(int n,double d)
+{
+  if (d <= 0.)
+    return 0.;
+  if (d >= 1.)
+    return 1.;
+  unsigned int k = (unsigned int) floor(n*(1-d));
+  double s=0.;
+  double n_inv=1./n;
+  for (int j=0; j<=k; j++)
+    s += exp(gsl_sf_lnchoose(n,j)+
+	     (n-j)*log(1.-d-j*n_inv)+
+	     (j-1)*log(d+j*n_inv));
+  return 1.-d*s;
+}
+
+/** @brief Returns the Kolmogorov statistics
  *
  *  The data are contained in the `gsl_vector` pointed to
  *  by `data`. If the content is not sorted (`sorted==false`)
  *  the data are first copied before being sorted.
+ *  Argument `what` can be one of "D", "D+", "D-". If "D" the
+ *  two sided statistics is returned, if "D+" the maximal distance
+ *  of the dominating part of the empirical cdf to the theoretical 
+ *  one is returned, if "D-" the maximal distance of the dominated
+ *  part of the empirical cdf to the theoretical one is returned.
+ *  If what is given a "wrong" value, -1.0 is returned.
  *
  *  @param[in] data pointer to a `gsl_vector` containing the data
  *  @param[in] sorted a boolean indicated if the `data` content is
  *             already sorted (`true`) or not (`false`)
- *  @returns a double with the Kolomogorov statistics
+ *  @param[in] what a character string, "D", "D+" or "D-"
+ *  @returns a double with the Kolomogorov statistics of -1.0 if
+ *           a wrong value for `what` was given
 */
-double aspa_Kolmogorov_D(gsl_vector * data, bool sorted)
+double aspa_Kolmogorov_D(gsl_vector * data, bool sorted, char * what)
 {
+  char * choices[] = {"D","D+","D-"};
   gsl_vector * data_s;
   if (sorted == false)
   {
@@ -155,21 +191,28 @@ double aspa_Kolmogorov_D(gsl_vector * data, bool sorted)
   {
     data_s = data;
   }
-  double D=0.;
+  double D_p=0.;
+  double D_m=0.;
   double inv_n = 1./data->size;
   for (size_t i=0; i<data->size; i++)
   {
     double x = gsl_vector_get(data_s,i);
     double diff = x-i*inv_n; 
-    if (diff > D)
-      D = diff;
+    if (diff > D_p)
+      D_p = diff;
     diff = inv_n - diff;
-    if (diff > D)
-      D = diff;
+    if (diff > D_m)
+      D_m = diff;
   }
   if (sorted == false)
     gsl_vector_free(data_s);
-  return D;
+  if (strcmp(what,choices[0])==0)
+    return GSL_MAX_DBL(D_p,D_m);
+  if (strcmp(what,choices[1])==0)
+    return D_p;
+  if (strcmp(what,choices[2])==0)
+    return D_m;
+  return -1.;
 }
 
 
@@ -385,4 +428,44 @@ double aspa_cdf_AD_P(int n,double z)
   v=(x-c)/(.8-c);
   v=-.00022633+(6.54034-(14.6538-(14.458-(8.259-1.91864*v)*v)*v)*v)*v;
   return x+v*(.04213+.01365/n)/n;
+}
+
+/** @brief Perform "Durbin's modification" on data contained in `seq`
+ *
+ *  The data are supposed to between 0 and 1. If such is not the case
+ *  the function returns -1 and prints an error message to the stderr.
+ *
+ *  @param[in] seq a pointer to a `gsl_vector` containing the data
+ *  @param[out] res a pointer to a `gsl_vector` where the result is
+ *              stored
+ *  @results 0 if everything goes fine, -1 otherwise
+*/
+int aspa_durbin_modification(const gsl_vector * seq, gsl_vector * res)
+{
+  gsl_vector_memcpy(res,seq);
+  gsl_sort_vector(res);
+  size_t n=res->size;
+  if (gsl_vector_get(res,0) < 0)
+  {
+    fprintf(stderr,"The elements of seq should all be >= 0.\n");
+    return -1;
+  }
+  if (gsl_vector_get(res,n-1) > 1)
+  {
+    fprintf(stderr,"The elements of seq should all be <= 0.\n");
+    return -1;
+  }
+  gsl_vector *iei = gsl_vector_alloc(n+1);
+  gsl_vector_set(iei,0,gsl_vector_get(res,0));
+  for (size_t i=1; i < n; i++)
+    gsl_vector_set(iei,i,gsl_vector_get(res,i)-gsl_vector_get(res,i-1));
+  gsl_vector_set(iei,n,1.-gsl_vector_get(res,n-1));
+  gsl_sort_vector(iei);
+  for (size_t i=n+1; i>1; i--)
+    gsl_vector_set(iei,i,(n+2-i)*(gsl_vector_get(iei,i-1)-gsl_vector_get(iei,i-2)));
+  gsl_vector_set(res,0,gsl_vector_get(iei,0));
+  for (size_t i=1; i<n; i++)
+    gsl_vector_set(res,i,gsl_vector_get(res,i-1)+gsl_vector_get(iei,i));
+  gsl_vector_free(iei);
+  return 0;
 }
