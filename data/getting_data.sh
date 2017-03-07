@@ -15,7 +15,7 @@ tar -xvzf stoch2.tgz ch4/vehicles.dat
 mv ch4/vehicles.dat .
 rmdir ch4
 rm stoch2.tgz
-sed '1d' vehicles.dat | sed 's/^\W//g' | sed 's/^M//g' | sed 's/ /\n/g' | grep '[^[:blank:]]' > traffic.dat
+sed -e '1d' < vehicles.dat | sed -e 's/^\W//g' | sed -e 's/ /\n/g' | sed -e 's/^M//g' | grep '[^[:blank:]]' > traffic.dat
 rm vehicles.dat
 
 

@@ -198,11 +198,11 @@ double aspa_Kolmogorov_D(gsl_vector * data, bool sorted, char * what)
   {
     double x = gsl_vector_get(data_s,i);
     double diff = x-i*inv_n; 
-    if (diff > D_p)
-      D_p = diff;
-    diff = inv_n - diff;
     if (diff > D_m)
       D_m = diff;
+    diff = inv_n - diff;
+    if (diff > D_p)
+      D_p = diff;
   }
   if (sorted == false)
     gsl_vector_free(data_s);
