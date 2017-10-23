@@ -21,6 +21,7 @@
 #+LaTeX_HEADER: \usepackage{listings}
 #+LaTeX_HEADER: \lstloadlanguages{C,Gnuplot,bash,sh,R}
 #+LaTeX_HEADER: \hypersetup{colorlinks=true,pagebackref=true}
+#+STARTUP: indent
 
 #+NAME: org-latex-set-up
 #+BEGIN_SRC emacs-lisp :exports none :results silent
@@ -91,7 +92,7 @@ Windows user who want to use the interactive plotting capabilities of
 the library (recommended) will also have to install
 [[http://x.cygwin.com/][=Cygwin/X=]].
 
-For now the compilation requires either =make or [[http://scons.org/][Scons]].
+For now the compilation requires either =make= or [[http://scons.org/][Scons]].
 
 ** Getting and compiling the code
    :PROPERTIES:
@@ -134,8 +135,8 @@ After that, you're in business.
   :CUSTOM_ID: data-used
   :END:
 
-We are going to use spike trains obtained from the antennal lobe--first
-olfactory relay--of locust, /Schistocerca americana/. These spike trains
+We are going to use spike trains obtained from the antennal lobe--the first
+olfactory relay--of locusts, /Schistocerca americana/. These spike trains
 can be found on the
 [[https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/][zenodo-locust-datasets-analysis]]
 GitHub repository. You can also find there a complete description of the
@@ -259,7 +260,7 @@ Usage:
   (in s) if that makes sense, used only when reading 'raw' data
 #+END_EXAMPLE
 
-For demonstration we can call it on the data file we just downloaded\linebreak
+For demonstration we can call it on the data file we just downloaded
 (=locust20010214_Spontaneous_1_tetB_u1.txt=), writing the result into a
 new text file =locust20010214_Spontaneous_1_tetB_u1.aspa= for further
 inspection:
