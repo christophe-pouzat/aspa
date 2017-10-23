@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2017-03-01 mer. 16:34 -->
+<!-- 2017-10-23 lun. 21:20 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><i>Analyse des séquences de potentiels d'action</i> Tutorial</title>
@@ -184,7 +184,7 @@
 @licstart  The following is the entire license notice for the
 JavaScript code in this tag.
 
-Copyright (C) 2012-2013 Free Software Foundation, Inc.
+Copyright (C) 2012-2017 Free Software Foundation, Inc.
 
 The JavaScript code in this tag is free software: you can
 redistribute it and/or modify it under the terms of the GNU
@@ -225,28 +225,6 @@ for the JavaScript code in this tag.
  }
 /*]]>*///-->
 </script>
-<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        displayAlign: "center",
-        displayIndent: "0em",
-
-        "HTML-CSS": { scale: 100,
-                        linebreaks: { automatic: "false" },
-                        webFont: "TeX"
-                       },
-        SVG: {scale: 100,
-              linebreaks: { automatic: "false" },
-              font: "TeX"},
-        NativeMML: {scale: 100},
-        TeX: { equationNumbers: {autoNumber: "AMS"},
-               MultLineWidth: "85%",
-               TagSide: "right",
-               TagIndent: ".8em"
-             }
-});
-</script>
-<script type="text/javascript"
-        src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
 </head>
 <body>
 <div id="content">
@@ -272,9 +250,10 @@ for the JavaScript code in this tag.
 <li><a href="#basic-statistics">4.2. Basic statistics</a></li>
 <li><a href="#basic-plots">4.3. Basic plots</a>
 <ul>
-<li><a href="#org5ef7ae1">4.3.1. Raster plot</a></li>
-<li><a href="#org9e6d77f">4.3.2. A fancy trick</a></li>
-<li><a href="#org7cb31df">4.3.3. Counting process plot</a></li>
+<li><a href="#org26e5dff">4.3.1. Raster plot</a></li>
+<li><a href="#orgd314311">4.3.2. A fancy trick</a></li>
+<li><a href="#orge2595bd">4.3.3. Counting process plots</a></li>
+<li><a href="#orgab51946">4.3.4. Lagged ranked ISI plot</a></li>
 </ul>
 </li>
 </ul>
@@ -283,8 +262,8 @@ for the JavaScript code in this tag.
 </div>
 </div>
 
-<div id="outline-container-orgdc73f80" class="outline-2">
-<h2 id="the-idea-motivating-this-development"><a id="orgdc73f80"></a><span class="section-number-2">1</span> The idea motivating this development</h2>
+<div id="outline-container-org606b046" class="outline-2">
+<h2 id="the-idea-motivating-this-development"><a id="org606b046"></a><span class="section-number-2">1</span> The idea motivating this development</h2>
 <div class="outline-text-2" id="text-the-idea-motivating-this-development">
 <p>
 The idea here is to implement the Unix/Linux "philosophy"&#x2013;as exposed
@@ -301,8 +280,8 @@ are going to use <a href="http://gnuplot.info/">gnuplot</a>.
 </div>
 </div>
 
-<div id="outline-container-org9494561" class="outline-2">
-<h2 id="required-software"><a id="org9494561"></a><span class="section-number-2">2</span> Required software</h2>
+<div id="outline-container-org5fed42e" class="outline-2">
+<h2 id="required-software"><a id="org5fed42e"></a><span class="section-number-2">2</span> Required software</h2>
 <div class="outline-text-2" id="text-required-software">
 <p>
 The code will be written mostly in <code>C</code>. If you want a clear and quick
@@ -323,12 +302,12 @@ the library (recommended) will also have to install
 </p>
 
 <p>
-For now the compilation requires either =make or <a href="http://scons.org/">Scons</a>.
+For now the compilation requires either <code>make</code> or <a href="http://scons.org/">Scons</a>.
 </p>
 </div>
 
-<div id="outline-container-org965220d" class="outline-3">
-<h3 id="getting-and-compiling-the-code"><a id="org965220d"></a><span class="section-number-3">2.1</span> Getting and compiling the code</h3>
+<div id="outline-container-orgb369859" class="outline-3">
+<h3 id="getting-and-compiling-the-code"><a id="orgb369859"></a><span class="section-number-3">2.1</span> Getting and compiling the code</h3>
 <div class="outline-text-3" id="text-getting-and-compiling-the-code">
 <p>
 The code is hosted on
@@ -339,16 +318,29 @@ code sub-directory and, if using <code>make</code>, type:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">make all
+<pre class="src src-sh"><span style="color: #729fcf;">cd</span> ../code &amp;&amp; make all
 </pre>
 </div>
+
+<pre class="example">
+cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_single.o aspa_single.c
+ar cr libaspa.a aspa_single.o
+cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_read_spike_train.o aspa_read_spike_train.c
+cc aspa_read_spike_train.o libaspa.a `pkg-config --libs gsl `  -o aspa_read_spike_train
+cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_mst_fns.o aspa_mst_fns.c
+cc aspa_mst_fns.o libaspa.a `pkg-config --libs gsl `  -o aspa_mst_fns
+cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_mst_aggregate.o aspa_mst_aggregate.c
+cc aspa_mst_aggregate.o libaspa.a `pkg-config --libs gsl `  -o aspa_mst_aggregate
+cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_mst_plot.o aspa_mst_plot.c
+cc aspa_mst_plot.o libaspa.a `pkg-config --libs gsl `  -o aspa_mst_plot
+</pre>
 
 <p>
 or with <code>SCons</code>:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">scons -Q
+<pre class="src src-sh">scons -Q
 </pre>
 </div>
 
@@ -366,9 +358,14 @@ appearing when you type:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">echo $PATH
+<pre class="src src-sh"><span style="color: #729fcf;">echo</span> $<span style="color: #ff6347;">PATH</span>
 </pre>
 </div>
+
+<pre class="example">
+/opt/jython/bin/:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl
+
+</pre>
 
 <p>
 After that, you're in business.
@@ -377,12 +374,12 @@ After that, you're in business.
 </div>
 </div>
 
-<div id="outline-container-orge611e8b" class="outline-2">
-<h2 id="data-used"><a id="orge611e8b"></a><span class="section-number-2">3</span> Data used</h2>
+<div id="outline-container-org1cdd39c" class="outline-2">
+<h2 id="data-used"><a id="org1cdd39c"></a><span class="section-number-2">3</span> Data used</h2>
 <div class="outline-text-2" id="text-data-used">
 <p>
-We are going to use spike trains obtained from the antennal lobe&#x2013;first
-olfactory relay&#x2013;of locust, <i>Schistocerca americana</i>. These spike trains
+We are going to use spike trains obtained from the antennal lobe&#x2013;the first
+olfactory relay&#x2013;of locusts, <i>Schistocerca americana</i>. These spike trains
 can be found on the
 <a href="https://christophe-pouzat.github.io/zenodo-locust-datasets-analysis/">zenodo-locust-datasets-analysis</a>
 GitHub repository. You can also find there a complete description of the
@@ -394,8 +391,8 @@ can be found at the following address:
 </p>
 </div>
 
-<div id="outline-container-orgda64331" class="outline-3">
-<h3 id="getting-a-spike-train"><a id="orgda64331"></a><span class="section-number-3">3.1</span> Getting a spike train</h3>
+<div id="outline-container-orgf6603d1" class="outline-3">
+<h3 id="getting-a-spike-train"><a id="orgf6603d1"></a><span class="section-number-3">3.1</span> Getting a spike train</h3>
 <div class="outline-text-3" id="text-getting-a-spike-train">
 <p>
 We will start by downloading the spike train from unit 1 from <code>group</code>
@@ -406,12 +403,27 @@ don't need these line breaks):
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">wget https://raw.githubusercontent.com/christophe-pouzat/\
-zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
-locust20010214/locust20010214_spike_trains/\
+<pre class="src src-sh">wget https://raw.githubusercontent.com/christophe-pouzat/<span style="color: #ad7fa8; font-style: italic;">\</span>
+zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/<span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214/locust20010214_spike_trains/<span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214_Spontaneous_1_tetB_u1.txt
 </pre>
 </div>
+
+<pre class="example">
+--2017-10-23 21:14:47--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u1.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 27743 (27K) [text/plain]
+Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u1.txt »
+
+     0K .......... .......... .......                         100%  957K=0,03s
+
+2017-10-23 21:14:47 (957 KB/s) — « locust20010214_Spontaneous_1_tetB_u1.txt » sauvegardé [27743/27743]
+
+</pre>
 
 <p>
 This "spike train" contains in fact the result of 30 consecutive
@@ -424,13 +436,13 @@ sorting description</a> of this data set.
 </div>
 </div>
 
-<div id="outline-container-org9a50cd0" class="outline-2">
-<h2 id="preliminary-analysis"><a id="org9a50cd0"></a><span class="section-number-2">4</span> Preliminary analysis</h2>
+<div id="outline-container-org8892200" class="outline-2">
+<h2 id="preliminary-analysis"><a id="org8892200"></a><span class="section-number-2">4</span> Preliminary analysis</h2>
 <div class="outline-text-2" id="text-preliminary-analysis">
 </div>
 
-<div id="outline-container-orgcc474b3" class="outline-3">
-<h3 id="reading-the-data"><a id="orgcc474b3"></a><span class="section-number-3">4.1</span> Reading the data</h3>
+<div id="outline-container-orgf6c3bc2" class="outline-3">
+<h3 id="reading-the-data"><a id="orgf6c3bc2"></a><span class="section-number-3">4.1</span> Reading the data</h3>
 <div class="outline-text-3" id="text-reading-the-data">
 <p>
 In is not expected that the data (spike trains) one wants to work with
@@ -452,7 +464,7 @@ file):
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">head locust20010214_Spontaneous_1_tetB_u1.txt
+<pre class="src src-sh">head locust20010214_Spontaneous_1_tetB_u1.txt
 </pre>
 </div>
 
@@ -475,7 +487,7 @@ lines):
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">tail locust20010214_Spontaneous_1_tetB_u1.txt
+<pre class="src src-sh">tail locust20010214_Spontaneous_1_tetB_u1.txt
 </pre>
 </div>
 
@@ -492,6 +504,7 @@ lines):
 13472243
 </pre>
 
+
 <p>
 Function <code>aspa_read_spike_train</code> will read these times from the <code>stdin</code>
 and output them in a "nice" format (still a text file by default) to the
@@ -500,13 +513,9 @@ function by calling it with the <code>--help</code> argument:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --help
+<pre class="src src-sh">./aspa_read_spike_train --help
 </pre>
 </div>
-
-<p>
-That will give you:
-</p>
 
 <pre class="example">
 Usage: 
@@ -523,18 +532,20 @@ Usage:
   (in s) if that makes sense, used only when reading 'raw' data
   --stim_offset &lt;real&gt;: the stimulus offset time
   (in s) if that makes sense, used only when reading 'raw' data
+
 </pre>
 
+
 <p>
-For demonstration we can call it on the data file we just downloaded\linebreak
+For demonstration we can call it on the data file we just downloaded
 (<code>locust20010214_Spontaneous_1_tetB_u1.txt</code>), writing the result into a
 new text file <code>locust20010214_Spontaneous_1_tetB_u1.aspa</code> for further
 inspection:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
-locust20010214_Spontaneous_1_tetB_u1.txt &gt; \
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_Spontaneous_1_tetB_u1.txt &gt; <span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214_Spontaneous_1_tetB_u1.aspa
 </pre>
 </div>
@@ -544,7 +555,7 @@ We can then look at the first 25 lines of our new file with:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">head -n 25 locust20010214_Spontaneous_1_tetB_u1.aspa
+<pre class="src src-sh">head -n 25 locust20010214_Spontaneous_1_tetB_u1.aspa 
 </pre>
 </div>
 
@@ -576,6 +587,7 @@ We can then look at the first 25 lines of our new file with:
 5.31933
 </pre>
 
+
 <p>
 We see that the "non-data" element are on lines starting with a "#"
 character. The "head" of the file specifies how many trial are in the
@@ -585,14 +597,14 @@ interactively you can type:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">less locust20010214_Spontaneous_1_tetB_u1.aspa
+<pre class="src src-sh">less locust20010214_Spontaneous_1_tetB_u1.aspa 
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org7cd06ed" class="outline-3">
-<h3 id="basic-statistics"><a id="org7cd06ed"></a><span class="section-number-3">4.2</span> Basic statistics</h3>
+<div id="outline-container-org8b1270b" class="outline-3">
+<h3 id="basic-statistics"><a id="org8b1270b"></a><span class="section-number-3">4.2</span> Basic statistics</h3>
 <div class="outline-text-3" id="text-basic-statistics">
 <p>
 Program <code>aspa_mst_fns</code> (<code>mst</code> stands for "multiple spike trains" and
@@ -601,7 +613,7 @@ A description of its use is obtained by calling the program with the <code>--hel
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_mst_fns --help
+<pre class="src src-sh" id="org3f2a0eb">./aspa_mst_fns --help
 </pre>
 </div>
 
@@ -610,16 +622,18 @@ Usage:
   --in_bin: specify binary data input
 
 Returns five number summary and additional stats.
+
 </pre>
+
 
 <p>
 We can call this function directly on the output of <code>aspa_read_spike_train</code> using a <a href="http://www.linfo.org/pipe.html">pipe</a> with:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
-locust20010214_Spontaneous_1_tetB_u1.txt | \
-aspa_mst_fns
+<pre class="src src-sh" id="org486e8dc">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_Spontaneous_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
+./aspa_mst_fns
 </pre>
 </div>
 
@@ -638,27 +652,43 @@ A 95% confidence interval for the lag 1 Spearman rank correlation is: [0.400336,
 </div>
 </div>
 
-<div id="outline-container-org104efef" class="outline-3">
-<h3 id="basic-plots"><a id="org104efef"></a><span class="section-number-3">4.3</span> Basic plots</h3>
+
+<div id="outline-container-org6a8d351" class="outline-3">
+<h3 id="basic-plots"><a id="org6a8d351"></a><span class="section-number-3">4.3</span> Basic plots</h3>
 <div class="outline-text-3" id="text-basic-plots">
 <p>
-There are several plots one might want to create at an early stage of spike train data analysis. Since these plots are more "attractive" when built from data with a response to a stimulus, we will start by getting one such case (from the same experiment and same neuron):
+There are several plots one might want to create at an early stage of spike train data analysis. Since most of these plots are more "attractive" when built from data with a response to a stimulus, we will start by getting one such case (from the same experiment and same neuron):
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">wget https://raw.githubusercontent.com/christophe-pouzat/\
-zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
-locust20010214/locust20010214_spike_trains/\
+<pre class="src src-sh" id="org817f640">wget https://raw.githubusercontent.com/christophe-pouzat/<span style="color: #ad7fa8; font-style: italic;">\</span>
+zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/<span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214/locust20010214_spike_trains/<span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214_C3H_1_tetB_u1.txt
 </pre>
 </div>
+
+<pre class="example">
+--2017-10-23 20:53:00--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_C3H_1_tetB_u1.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 29318 (29K) [text/plain]
+Sauvegarde en : « locust20010214_C3H_1_tetB_u1.txt.1 »
+
+     0K .......... .......... ........                        100% 1,75M=0,02s
+
+2017-10-23 20:53:01 (1,75 MB/s) — « locust20010214_C3H_1_tetB_u1.txt.1 » sauvegardé [29318/29318]
+
+</pre>
 
 <p>
 This file contains the responses to 25 stimulations with <code>cis-3-hexen-1-ol</code>. The classical way of displaying such data is the <code>raster plot</code>. This plot as well as several over ones we will shortly see is generated by calling <code>aspa_mst_plot</code>. As usual, calling the function with argument <code>--help</code> gives us a basic explanation on how to use it:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_mst_plot --help
+<pre class="src src-sh" id="orgad2810f">./aspa_mst_plot --help
 </pre>
 </div>
 
@@ -667,34 +697,40 @@ Usage:
   --in_bin: specify binary data input
   --text: specify text output
   --what &lt;string&gt;: one of 'raster', 'cp_rt', 'cp_wt',
-  'cp_norm', the type of plot (see bellow)
+  'cp_norm', 'lrank', the type of plot (see bellow)
+  --lag &lt;positive integer&gt;: the lag used in lagged
+    ranked plots (default at 1).
 
-An interactive lot is generated.
+An interactive plot is generated.
 If what is set to 'raster' a raster plot is generated.
 If what is set to 'cp_rt' the observed counting process
 in 'real' time is generated, that is trial appear one after
 the other.
 If what is set to 'cp_wt' the observed counting processes
-corresponding to each trial are shown on the 'within trial time.
+corresponding to each trial are shown on the 'within trial time'.
 If what is set to 'cp_norm' the normalized aggregated counting
 process is displayed (normalization means here that the step size
 due to each spike in each trial is 1/number of trials; in a sense
 the 'mean' counting process is displayed).
+If what is set to 'lrank', isi are ranked from the smallest to
+the largest and the rank of isi i+lag is plotted against the
+lag of isi i.
 </pre>
 </div>
 
-<div id="outline-container-org5ef7ae1" class="outline-4">
-<h4 id="org5ef7ae1"><span class="section-number-4">4.3.1</span> Raster plot</h4>
+
+<div id="outline-container-org26e5dff" class="outline-4">
+<h4 id="org26e5dff"><span class="section-number-4">4.3.1</span> Raster plot</h4>
 <div class="outline-text-4" id="text-4-3-1">
 <p>
 Here, to get the classical raster we do:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
---stim_onset=10 --stim_offset=11 &lt; \
-locust20010214_C3H_1_tetB_u1.txt | \
-aspa_mst_plot --what=raster
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 <span style="color: #ad7fa8; font-style: italic;">\</span>
+--stim_onset=10 --stim_offset=11 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
+./aspa_mst_plot --what=raster
 </pre>
 </div>
 
@@ -703,10 +739,10 @@ This will make a new window appear with a plot similar to the one we will now co
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
---stim_onset=10 --stim_offset=11 &lt; \
-locust20010214_C3H_1_tetB_u1.txt | \
-aspa_mst_plot --what=raster --text &gt; \
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 <span style="color: #ad7fa8; font-style: italic;">\</span>
+--stim_onset=10 --stim_offset=11 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
+./aspa_mst_plot --what=raster --text &gt; <span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214_C3H_1_tetB_u1.raster
 </pre>
 </div>
@@ -716,12 +752,13 @@ Here instead of the "new window output" we generated at text output (that's what
 </p>
 
 <div class="org-src-container">
-<pre class="src src-gnuplot">set grid
-unset key
-set xlabel 'Time (s)'
-set ylabel 'Trial'
-plot [0:30] [0:26] 'locust20010214_C3H_1_tetB_u1.raster' index 0 using 1:2 with filledcurve closed lc 'grey',\
-     '' index 1:25 using 1:2 with dots lc 'black'
+<pre class="src src-gnuplot"><span style="color: #8ae234;">set</span> grid
+<span style="color: #8ae234;">unset</span> key
+<span style="color: #8ae234;">set</span> xlabel <span style="color: #ad7fa8; font-style: italic;">'Time (s)'</span>
+<span style="color: #8ae234;">set</span> ylabel <span style="color: #ad7fa8; font-style: italic;">'Trial'</span>
+<span style="color: #729fcf; font-weight: bold;">plot</span> [<span style="color: #8ae234;">0:30</span>] [<span style="color: #8ae234;">0:26</span>] <span style="color: #ad7fa8; font-style: italic;">'locust20010214_C3H_1_tetB_u1.raster'</span> \
+     <span style="color: #8ae234; font-weight: bold;">index</span> 0 <span style="color: #8ae234; font-weight: bold;">using</span> 1:2 <span style="color: #8ae234; font-weight: bold;">with</span> filledcurve closed lc <span style="color: #ad7fa8; font-style: italic;">'grey'</span>,\
+     <span style="color: #ad7fa8; font-style: italic;">''</span> <span style="color: #8ae234; font-weight: bold;">index</span> 1:25 <span style="color: #8ae234; font-weight: bold;">using</span> 1:2 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">dots</span> lc <span style="color: #ad7fa8; font-style: italic;">'black'</span>
 </pre>
 </div>
 
@@ -733,34 +770,34 @@ plot [0:30] [0:26] 'locust20010214_C3H_1_tetB_u1.raster' index 0 using 1:2 with 
 </div>
 </div>
 
-<div id="outline-container-org9e6d77f" class="outline-4">
-<h4 id="org9e6d77f"><span class="section-number-4">4.3.2</span> A fancy trick</h4>
+<div id="outline-container-orgd314311" class="outline-4">
+<h4 id="orgd314311"><span class="section-number-4">4.3.2</span> A fancy trick</h4>
 <div class="outline-text-4" id="text-4-3-2">
 <p>
 We can also make the raster plot and get the basic stats printed at once with the <a href="https://www.gnu.org/software/coreutils/manual/html_node/tee-invocation.html">tee</a> command as follows:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
-locust20010214_C3H_1_tetB_u1.txt | tee &gt;(aspa_mst_plot --what=raster) | \
-aspa_mst_fns
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.txt | tee &gt;(aspa_mst_plot --what=raster) | <span style="color: #ad7fa8; font-style: italic;">\</span>
+./aspa_mst_fns
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org7cb31df" class="outline-4">
-<h4 id="org7cb31df"><span class="section-number-4">4.3.3</span> Counting process plot</h4>
+<div id="outline-container-orge2595bd" class="outline-4">
+<h4 id="orge2595bd"><span class="section-number-4">4.3.3</span> Counting process plots</h4>
 <div class="outline-text-4" id="text-4-3-3">
 <p>
 There are several ways to create a "counting process" plot. The first one, used mainly for checking data stationarity is building the "true" observed counting process plot, that is at each spike time the step function jumps by one unit and successive trials are shown one after the other as they <i>actually</i> occurred. This is what is specified with argument <code>cp_rt</code> to option <code>what</code>:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
---stim_onset=10 --stim_offset=11 &lt; \
-locust20010214_C3H_1_tetB_u1.txt | \
-aspa_mst_plot --what=cp_rt
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 <span style="color: #ad7fa8; font-style: italic;">\</span>
+--stim_onset=10 --stim_offset=11 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
+./aspa_mst_plot --what=cp_rt
 </pre>
 </div>
 
@@ -779,9 +816,9 @@ We might also want to look at the individual observed counting processes after r
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; \
-locust20010214_C3H_1_tetB_u1.txt | \
-aspa_mst_plot --what=cp_wt
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
+./aspa_mst_plot --what=cp_wt
 </pre>
 </div>
 
@@ -795,15 +832,16 @@ resulting in a plot looking like:
 </p>
 </div>
 
+
 <p>
 We can also decide that to see if there is a response or not, we can construct the average step function. That is, we replace the step size in the previous plot by 1/N (N is the number of trials) and we sum all these resulting step functions. This is done with argument <code>cp_norm</code> to option <code>what</code>:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell">aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
---stim_onset=10 --stim_offset=11 &lt; \
-locust20010214_C3H_1_tetB_u1.txt | \
-aspa_mst_plot --what=cp_norm
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 <span style="color: #ad7fa8; font-style: italic;">\</span>
+--stim_onset=10 --stim_offset=11 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
+./aspa_mst_plot --what=cp_norm
 </pre>
 </div>
 
@@ -816,6 +854,74 @@ resulting in a plot looking like:
 <p><img src="fig/locust20010214_C3H_1_tetB_u1_cp_norm.png" alt="locust20010214_C3H_1_tetB_u1_cp_norm.png" />
 </p>
 </div>
+
+<p>
+One might want to prepare a more sophisticated plot for, say, a publication showing both the individual observed counting processes and their average. This could be done as follows, by creating first some files with the "properly" formated data:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 <span style="color: #ad7fa8; font-style: italic;">\</span>
+--stim_onset=10 --stim_offset=11 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.txt &gt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.aspa
+
+./aspa_mst_plot --what=cp_norm --text &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.aspa &gt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.cp_norm
+
+./aspa_mst_plot --what=cp_wt --text &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.aspa &gt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+locust20010214_C3H_1_tetB_u1.cp_wt
+</pre>
+</div>
+
+<p>
+Then within <code>gnuplot</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-gnuplot"><span style="color: #8ae234;">set</span> grid
+<span style="color: #8ae234;">unset</span> key
+<span style="color: #8ae234;">set</span> xlabel <span style="color: #ad7fa8; font-style: italic;">'Time (s)'</span>
+<span style="color: #8ae234;">set</span> <span style="color: #8ae234; font-weight: bold;">title</span> <span style="color: #ad7fa8; font-style: italic;">'Observed counting processes'</span>
+<span style="color: #8ae234;">set</span> ylabel <span style="color: #ad7fa8; font-style: italic;">'Events count'</span>
+<span style="color: #729fcf; font-weight: bold;">plot</span> [<span style="color: #8ae234;">0:29</span>] [<span style="color: #8ae234;">0:245</span>] <span style="color: #ad7fa8; font-style: italic;">'locust20010214_C3H_1_tetB_u1.cp_wt'</span> \
+     <span style="color: #8ae234; font-weight: bold;">index</span> 0 <span style="color: #8ae234; font-weight: bold;">using</span> 1:2 <span style="color: #8ae234; font-weight: bold;">with</span> filledcurve closed lc <span style="color: #ad7fa8; font-style: italic;">'grey'</span>,\
+     <span style="color: #ad7fa8; font-style: italic;">''</span> <span style="color: #8ae234; font-weight: bold;">index</span> 1:25 <span style="color: #8ae234; font-weight: bold;">using</span> 1:2 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> lc <span style="color: #ad7fa8; font-style: italic;">'black'</span>,\
+     <span style="color: #ad7fa8; font-style: italic;">'locust20010214_C3H_1_tetB_u1.cp_norm'</span> <span style="color: #8ae234; font-weight: bold;">index</span> 1 \
+     <span style="color: #8ae234; font-weight: bold;">using</span> 1:2 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> lc <span style="color: #ad7fa8; font-style: italic;">'red'</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="fig/locust20010214_C3H_1_tetB_u1_cp_norm_wt.png" alt="locust20010214_C3H_1_tetB_u1_cp_norm_wt.png" />
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgab51946" class="outline-4">
+<h4 id="orgab51946"><span class="section-number-4">4.3.4</span> Lagged ranked ISI plot</h4>
+<div class="outline-text-4" id="text-4-3-4">
+<p>
+Coming back to the spontaneous data, a good graphical way to look for correlations between successive inter spike intervals is to rank them (from the smallest to the largest) before plotting the rank of interval i+lag against the rank of interval i. We can do that with the spontaneous data as follows:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 --stim_onset=10 --stim_offset=11 &lt; <span style="color: #ad7fa8; font-style: italic;">\ </span>locust20010214_Spontaneous_1_tetB_u1.txt | ./aspa_mst_plot --what=lrank
+</pre>
+</div>
+
+<p>
+We then obtain a graph looking like:
+</p>
+
+
+<div class="figure">
+<p><img src="fig/locust20010214_Spontaneous_1_tetB_u1_lrank.png" alt="locust20010214_Spontaneous_1_tetB_u1_lrank.png" />
+</p>
+</div>
 </div>
 </div>
 </div>
@@ -823,7 +929,7 @@ resulting in a plot looking like:
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Christophe Pouzat</p>
-<p class="date">Created: 2017-03-01 mer. 16:34</p>
+<p class="date">Created: 2017-10-23 lun. 21:20</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
