@@ -7,25 +7,27 @@
 
 #include <getopt.h>
 
-#define NUM_WHAT 4
+#define NUM_WHAT 5
 // Define allowed values for what
 char * good_what[] = {"raster",
 		      "cp_rt",
 		      "cp_wt",
-		      "cp_norm"};
+		      "cp_norm",
+		      "lrank"};
 
 int read_args(int argc, char ** argv,
 	      size_t * in_bin,
 	      char * what,
-	      size_t * text);
+	      size_t * text,
+	      size_t * lag);
 
 void print_usage();
 
 int main(int argc, char ** argv)
 {
-  size_t in_bin, text;
+  size_t in_bin, text, lag;
   char what[8];
-  int status = read_args(argc,argv,&in_bin,what,&text);
+  int status = read_args(argc,argv,&in_bin,what,&text,&lag);
   if (status == -1) exit (EXIT_FAILURE);
   aspa_sta * sta;
   if (in_bin == 0)
@@ -54,6 +56,8 @@ int main(int argc, char ** argv)
 	aspa_cp_plot_i(sta,true,true);
       }
     }
+    if (strcmp(what,good_what[4])==0) // lrank
+      aspa_lagged_rank_plot_i(sta, lag);
   }
   else
   { // Print to stdout
@@ -76,6 +80,8 @@ int main(int argc, char ** argv)
 	aspa_cp_plot_g(stdout,sta,true,true);
       }
     }
+    if (strcmp(what,good_what[4])==0)
+      aspa_lagged_rank_plot_g(stdout,sta, lag); // lrank
   }
   aspa_sta_free(sta);
   return 0;
@@ -87,29 +93,33 @@ int main(int argc, char ** argv)
  *  @param[in] argv argument of main
  *  @param[out] in_bin input format, O for "txt" 1 for "bin" (default 0)
  *  @param[out] what the type of plot, one of:
- *              "raster", "cp_rt", "cp_wt", "cp_norm"
+ *              "raster", "cp_rt", "cp_wt", "cp_norm", "lrank"
  *  @param[out] text output, O for interactive window 1 for "text" (default 0)
+ *  @param[out] lag lag used in ranked plot (default 1)
  *  @returns 0 when everything goes fine
 */
 int read_args(int argc, char ** argv,
 	      size_t * in_bin,
 	      char * what,
-	      size_t * text)
+	      size_t * text,
+	      size_t * lag)
 {
   // Define default values
   *in_bin=0;
   *text=0;
+  *lag=1;
   strcpy(what,"cp_rt");
   {int opt;
     static struct option long_options[] = {
       {"in_bin",no_argument,NULL,'i'},
       {"text",no_argument,NULL,'t'},
       {"what",optional_argument,NULL,'w'},
+      {"lag",optional_argument,NULL,'l'},
       {"help",no_argument,NULL,'h'},
       {NULL,0,NULL,0}
     };
     int long_index =0;
-    while ((opt = getopt_long(argc,argv,"hitw:",long_options,\
+    while ((opt = getopt_long(argc,argv,"hitl:w:",long_options,\
 			      &long_index)) != -1) {
       switch(opt) {
       case 'w':
@@ -132,6 +142,8 @@ int read_args(int argc, char ** argv,
 	break;
       case 't': *text=1;
 	break;
+      case 'l': *lag=atoi(optarg);
+	break;
       case 'h': print_usage();
 	return -1;
       default : print_usage();
@@ -151,7 +163,9 @@ void print_usage()
 	 "  --in_bin: specify binary data input\n"
 	 "  --text: specify text output\n"
 	 "  --what <string>: one of 'raster', 'cp_rt', 'cp_wt',\n"
-	 "  'cp_norm', the type of plot (see bellow)\n"
+	 "  'cp_norm', 'lrank', the type of plot (see bellow)\n"
+	 "  --lag <positive integer>: the lag used in lagged\n"
+	 "    ranked plots (default at 1).\n"
 	 "\n"
 	 "An interactive plot is generated.\n"
 	 "If what is set to 'raster' a raster plot is generated.\n"
@@ -163,5 +177,8 @@ void print_usage()
 	 "If what is set to 'cp_norm' the normalized aggregated counting\n"
 	 "process is displayed (normalization means here that the step size\n"
 	 "due to each spike in each trial is 1/number of trials; in a sense\n"
-	 "the 'mean' counting process is displayed).\n");
+	 "the 'mean' counting process is displayed).\n"
+	 "If what is set to 'lrank', isi are ranked from the smallest to\n"
+	 "the largest and the rank of isi i+lag is plotted against the\n"
+	 "lag of isi i.\n");
 }

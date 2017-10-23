@@ -902,3 +902,29 @@ void aspa_lagged_rank_plot_i(const aspa_sta * sta, size_t lag)
   gsl_permutation_free(rank);
   gsl_vector_free(isi);
 }
+
+/** @brief Writes a lagged rank plot from an aspa_sta structure
+ *         to a file in a gnuplot friendly format
+ *
+ *  @param[in/out] STREAM an open file
+ *  @param[in] sta a pointer to an aspa_sta structure
+ *  @param[in] lag the lag value (positive integer)
+ *  @returns 0 if everything goes fine
+*/
+int aspa_lagged_rank_plot_g(FILE * STREAM, const aspa_sta * sta, size_t lag)
+{
+  gsl_vector * isi = aspa_sta_isi(sta);
+  size_t n = isi->size;
+  assert (lag < n); // make sure the lag is small enough
+  gsl_permutation * perm = gsl_permutation_alloc(n);
+  gsl_permutation * rank = gsl_permutation_alloc(n);
+  gsl_sort_vector_index(perm,isi);
+  gsl_permutation_inverse(rank,perm);
+  for (size_t i=0; i < n-lag-1; i++)
+    fprintf(STREAM,"%d %d\n", (int) rank->data[i], (int) rank->data[i+lag]);
+  fprintf(STREAM,"\n\n");
+  gsl_permutation_free(perm);
+  gsl_permutation_free(rank);
+  gsl_vector_free(isi);
+  return 0;
+}

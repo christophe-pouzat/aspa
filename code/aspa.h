@@ -127,3 +127,7 @@ double aspa_errfix(int n, double x);
 double aspa_adinf(double z);
 
 int aspa_durbin_modification(const gsl_vector * seq, gsl_vector * res);
+
+void aspa_lagged_rank_plot_i(const aspa_sta * sta, size_t lag);
+
+int aspa_lagged_rank_plot_g(FILE * STREAM, const aspa_sta * sta, size_t lag);
