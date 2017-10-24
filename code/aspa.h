@@ -20,6 +20,7 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_cdf.h>
 #include <gsl/gsl_sf.h>
+#include <gsl/gsl_histogram.h>
 
 gsl_vector * aspa_raw_fscanf(FILE * STREAM, double sampling_frequency);
 

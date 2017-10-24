@@ -6,7 +6,7 @@ LDLIBS = `pkg-config --libs gsl `
 $(P): $(OBJECTS)
 
 all : libaspa.a aspa_read_spike_train aspa_mst_fns aspa_mst_aggregate aspa_mst_plot\
-aspa_mst_isi
+aspa_mst_isi aspa_hist_bw
 
 libaspa.a : aspa_single.o
 	ar cr libaspa.a aspa_single.o
@@ -40,6 +40,12 @@ aspa_mst_isi : $(aspa_mst_isi_objects) libaspa.a
 	cc $(aspa_mst_isi_objects) libaspa.a $(LDLIBS) -o aspa_mst_isi
 
 aspa_mst_isi.o : aspa.h
+
+aspa_hist_bw_objects=aspa_hist_bw.o
+aspa_hist_bw : $(aspa_hist_bw_objects) libaspa.a
+	cc $(aspa_hist_bw_objects) libaspa.a $(LDLIBS) -o aspa_hist_bw
+
+aspa_hist_bw.o : aspa.h
 
 aspa_single_test_objects=aspa_single_test.o
 aspa_single_test : $(aspa_single_test_objects) libaspa.a
@@ -80,6 +86,7 @@ clean :
 	$(aspa_mst_aggregate_objects) aspa_mst_aggregate \
 	$(aspa_mst_plot_objects) aspa_mst_plot \
 	$(aspa_mst_isi_objects) aspa_mst_isi \
+	$(aspa_hist_bw_objects) aspa_hist_bw \
 	$(aspa_single_test_objects) aspa_single_test \
 	$(aspa_single_testB_objects) aspa_single_testB \
 	$(aspa_single_testC_objects) aspa_single_testC \

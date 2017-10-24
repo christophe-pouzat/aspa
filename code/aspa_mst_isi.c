@@ -22,6 +22,7 @@ int main(int argc, char ** argv)
     sta = aspa_sta_fread(stdin);
 
   gsl_vector * isi = aspa_sta_isi(sta);
+  fprintf(stdout,"%d\n",(int) isi->size);
   for (size_t i=0; i<isi->size; i++)
     fprintf(stdout,"%g\n",gsl_vector_get(isi,i));
   
@@ -39,8 +40,8 @@ int read_args(int argc, char ** argv,
     "  -h --help: prints this message.\n"
     " The program reads data from the 'stdin' (default in text format)\n"
     " most likely resulting from a call to 'aspa_read_spike_train',\n"
-    " gets the inter spike intervals and writes them in text format\n"
-    " to the stdout\n\n";
+    " gets the inter spike intervals and writes the number of ISIs\n"
+    " followed by the individual ISIs (one per line) to the stdout\n\n";
   // Define default values
   *in_bin=0;
   {int opt;
