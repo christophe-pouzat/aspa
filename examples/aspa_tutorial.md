@@ -19,9 +19,10 @@
 <li><a href="#basic-statistics">4.2. Basic statistics</a></li>
 <li><a href="#basic-plots">4.3. Basic plots</a>
 <ul>
-<li><a href="#org2aee407">4.3.1. Raster plot</a></li>
-<li><a href="#orgdffbd71">4.3.2. A fancy trick</a></li>
-<li><a href="#org60b0a4d">4.3.3. Counting process plot</a></li>
+<li><a href="#orgfa3305b">4.3.1. Raster plot</a></li>
+<li><a href="#org36dd715">4.3.2. A fancy trick</a></li>
+<li><a href="#org6f898f0">4.3.3. Counting process plots</a></li>
+<li><a href="#org6619740">4.3.4. Lagged ranked ISI plot</a></li>
 </ul>
 </li>
 </ul>
@@ -80,7 +81,18 @@ to clone or download the repository (there is a button for that on the
 GitHub page). Once you have the repository on your hard drive, go to the
 code sub-directory and, if using `make`, type:
 
-    make all
+    cd ../code && make all
+
+    cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_single.o aspa_single.c
+    ar cr libaspa.a aspa_single.o
+    cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_read_spike_train.o aspa_read_spike_train.c
+    cc aspa_read_spike_train.o libaspa.a `pkg-config --libs gsl `  -o aspa_read_spike_train
+    cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_mst_fns.o aspa_mst_fns.c
+    cc aspa_mst_fns.o libaspa.a `pkg-config --libs gsl `  -o aspa_mst_fns
+    cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_mst_aggregate.o aspa_mst_aggregate.c
+    cc aspa_mst_aggregate.o libaspa.a `pkg-config --libs gsl `  -o aspa_mst_aggregate
+    cc `pkg-config --cflags gsl` -g -Wall -O0 -std=gnu11    -c -o aspa_mst_plot.o aspa_mst_plot.c
+    cc aspa_mst_plot.o libaspa.a `pkg-config --libs gsl `  -o aspa_mst_plot
 
 or with `SCons`:
 
@@ -96,6 +108,8 @@ the directories listed on your `PATH`, that is on one of the directories
 appearing when you type:
 
     echo $PATH
+
+    /opt/jython/bin/:/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl
 
 After that, you're in business.
 
@@ -130,6 +144,18 @@ don't need these line breaks):
     zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
     locust20010214/locust20010214_spike_trains/\
     locust20010214_Spontaneous_1_tetB_u1.txt
+
+    --2017-10-23 21:14:47--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u1.txt
+    Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+    Résolution de raw.githubusercontent.com… 151.101.92.133
+    Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+    requête HTTP transmise, en attente de la réponse… 200 OK
+    Taille : 27743 (27K) [text/plain]
+    Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u1.txt »
+    
+         0K .......... .......... .......                         100%  957K=0,03s
+    
+    2017-10-23 21:14:47 (957 KB/s) — « locust20010214_Spontaneous_1_tetB_u1.txt » sauvegardé [27743/27743]
 
 This "spike train" contains in fact the result of 30 consecutive
 continuous acquisitions, each 29 s long with a 1 s gap in between, as is
@@ -196,9 +222,7 @@ and output them in a "nice" format (still a text file by default) to the
 `stdout`. You can get a description to arguments accepted by the
 function by calling it with the `--help` argument:
 
-    aspa_read_spike_train --help
-
-That will give you:
+    ./aspa_read_spike_train --help
 
     Usage: 
       --in_bin: specify binary data input
@@ -220,7 +244,7 @@ For demonstration we can call it on the data file we just downloaded
 new text file `locust20010214_Spontaneous_1_tetB_u1.aspa` for further
 inspection:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
     locust20010214_Spontaneous_1_tetB_u1.txt > \
     locust20010214_Spontaneous_1_tetB_u1.aspa
 
@@ -271,7 +295,7 @@ Program `aspa_mst_fns` (`mst` stands for "multiple spike trains" and
 `fns` for "[Five-number summary](https://en.wikipedia.org/wiki/Five-number_summary)") return elementary statics related to a spike train data set.
 A description of its use is obtained by calling the program with the `--help` argument:
 
-    aspa_mst_fns --help
+    ./aspa_mst_fns --help
 
     Usage: 
       --in_bin: specify binary data input
@@ -280,9 +304,9 @@ A description of its use is obtained by calling the program with the `--help` ar
 
 We can call this function directly on the output of `aspa_read_spike_train` using a [pipe](http://www.linfo.org/pipe.html) with:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
     locust20010214_Spontaneous_1_tetB_u1.txt | \
-    aspa_mst_fns
+    ./aspa_mst_fns
 
     Data from 28 trials.
     The mean rate is: 4.10222 Hz.
@@ -300,53 +324,70 @@ We can call this function directly on the output of `aspa_read_spike_train` usin
 
 ## Basic plots
 
-There are several plots one might want to create at an early stage of spike train data analysis. Since these plots are more "attractive" when built from data with a response to a stimulus, we will start by getting one such case (from the same experiment and same neuron):
+There are several plots one might want to create at an early stage of spike train data analysis. Since most of these plots are more "attractive" when built from data with a response to a stimulus, we will start by getting one such case (from the same experiment and same neuron):
 
     wget https://raw.githubusercontent.com/christophe-pouzat/\
     zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
     locust20010214/locust20010214_spike_trains/\
     locust20010214_C3H_1_tetB_u1.txt
 
+    --2017-10-23 20:53:00--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_C3H_1_tetB_u1.txt
+    Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+    Résolution de raw.githubusercontent.com… 151.101.92.133
+    Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+    requête HTTP transmise, en attente de la réponse… 200 OK
+    Taille : 29318 (29K) [text/plain]
+    Sauvegarde en : « locust20010214_C3H_1_tetB_u1.txt.1 »
+    
+         0K .......... .......... ........                        100% 1,75M=0,02s
+    
+    2017-10-23 20:53:01 (1,75 MB/s) — « locust20010214_C3H_1_tetB_u1.txt.1 » sauvegardé [29318/29318]
+
 This file contains the responses to 25 stimulations with `cis-3-hexen-1-ol`. The classical way of displaying such data is the `raster plot`. This plot as well as several over ones we will shortly see is generated by calling `aspa_mst_plot`. As usual, calling the function with argument `--help` gives us a basic explanation on how to use it:
 
-    aspa_mst_plot --help
+    ./aspa_mst_plot --help
 
     Usage: 
       --in_bin: specify binary data input
       --text: specify text output
       --what <string>: one of 'raster', 'cp_rt', 'cp_wt',
-      'cp_norm', the type of plot (see bellow)
+      'cp_norm', 'lrank', the type of plot (see bellow)
+      --lag <positive integer>: the lag used in lagged
+        ranked plots (default at 1).
     
-    An interactive lot is generated.
+    An interactive plot is generated.
     If what is set to 'raster' a raster plot is generated.
     If what is set to 'cp_rt' the observed counting process
     in 'real' time is generated, that is trial appear one after
     the other.
     If what is set to 'cp_wt' the observed counting processes
-    corresponding to each trial are shown on the 'within trial time.
+    corresponding to each trial are shown on the 'within trial time'.
     If what is set to 'cp_norm' the normalized aggregated counting
     process is displayed (normalization means here that the step size
     due to each spike in each trial is 1/number of trials; in a sense
     the 'mean' counting process is displayed).
+    If what is set to 'lrank', isi are ranked from the smallest to
+    the largest and the rank of isi i+lag is plotted against the
+    lag of isi i.
 
 
-<a id="org2aee407"></a>
+<a id="orgfa3305b"></a>
 
 ### Raster plot
 
 Here, to get the classical raster we do:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
     --stim_onset=10 --stim_offset=11 < \
     locust20010214_C3H_1_tetB_u1.txt | \
-    aspa_mst_plot --what=raster
+    ./aspa_mst_plot --what=raster
 
 This will make a new window appear with a plot similar to the one we will now construct after calling the function with an additional argument (you can type `q` to kill the plot window):
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
     --stim_onset=10 --stim_offset=11 < \
     locust20010214_C3H_1_tetB_u1.txt | \
-    aspa_mst_plot --what=raster --text > \
+    ./aspa_mst_plot --what=raster --text > \
     locust20010214_C3H_1_tetB_u1.raster
 
 Here instead of the "new window output" we generated at text output (that's what the `--text` argument means) sent to the `stdout` and redirected this `stdout` to a file called `locust20010214_C3H_1_tetB_u1.raster`. We can now build "by hand" with `gnuplot` the same figure as the one we directly got (we have now more control on the output):
@@ -362,27 +403,27 @@ Here instead of the "new window output" we generated at text output (that's what
 ![img](fig/locust20010214_C3H_1_tetB_u1_raster.png)
 
 
-<a id="orgdffbd71"></a>
+<a id="org36dd715"></a>
 
 ### A fancy trick
 
 We can also make the raster plot and get the basic stats printed at once with the [tee](https://www.gnu.org/software/coreutils/manual/html_node/tee-invocation.html) command as follows:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
     locust20010214_C3H_1_tetB_u1.txt | tee >(aspa_mst_plot --what=raster) | \
-    aspa_mst_fns
+    ./aspa_mst_fns
 
 
-<a id="org60b0a4d"></a>
+<a id="org6f898f0"></a>
 
-### Counting process plot
+### Counting process plots
 
 There are several ways to create a "counting process" plot. The first one, used mainly for checking data stationarity is building the "true" observed counting process plot, that is at each spike time the step function jumps by one unit and successive trials are shown one after the other as they *actually* occurred. This is what is specified with argument `cp_rt` to option `what`:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
     --stim_onset=10 --stim_offset=11 < \
     locust20010214_C3H_1_tetB_u1.txt | \
-    aspa_mst_plot --what=cp_rt
+    ./aspa_mst_plot --what=cp_rt
 
 Giving a plot looking like:
 
@@ -390,9 +431,9 @@ Giving a plot looking like:
 
 We might also want to look at the individual observed counting processes after realigning them on the stimulus onset. This is obtained with argument `cp_wt` to option `what`:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
     locust20010214_C3H_1_tetB_u1.txt | \
-    aspa_mst_plot --what=cp_wt
+    ./aspa_mst_plot --what=cp_wt
 
 resulting in a plot looking like:
 
@@ -400,10 +441,10 @@ resulting in a plot looking like:
 
 We can also decide that to see if there is a response or not, we can construct the average step function. That is, we replace the step size in the previous plot by 1/N (N is the number of trials) and we sum all these resulting step functions. This is done with argument `cp_norm` to option `what`:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
     --stim_onset=10 --stim_offset=11 < \
     locust20010214_C3H_1_tetB_u1.txt | \
-    aspa_mst_plot --what=cp_norm
+    ./aspa_mst_plot --what=cp_norm
 
 resulting in a plot looking like:
 
@@ -411,16 +452,16 @@ resulting in a plot looking like:
 
 One might want to prepare a more sophisticated plot for, say, a publication showing both the individual observed counting processes and their average. This could be done as follows, by creating first some files with the "properly" formated data:
 
-    aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 \
     --stim_onset=10 --stim_offset=11 < \
     locust20010214_C3H_1_tetB_u1.txt > \
     locust20010214_C3H_1_tetB_u1.aspa
     
-    aspa_mst_plot --what=cp_norm --text < \
+    ./aspa_mst_plot --what=cp_norm --text < \
     locust20010214_C3H_1_tetB_u1.aspa > \
     locust20010214_C3H_1_tetB_u1.cp_norm
     
-    aspa_mst_plot --what=cp_wt --text < \
+    ./aspa_mst_plot --what=cp_wt --text < \
     locust20010214_C3H_1_tetB_u1.aspa > \
     locust20010214_C3H_1_tetB_u1.cp_wt
 
@@ -438,4 +479,17 @@ Then within `gnuplot`:
          using 1:2 with steps lc 'red' linewidth 2
 
 ![img](fig/locust20010214_C3H_1_tetB_u1_cp_norm_wt.png)
+
+
+<a id="org6619740"></a>
+
+### Lagged ranked ISI plot
+
+Coming back to the spontaneous data, a good graphical way to look for correlations between successive inter spike intervals is to rank them (from the smallest to the largest) before plotting the rank of interval i+lag against the rank of interval i. We can do that with the spontaneous data as follows:
+
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 --stim_onset=10 --stim_offset=11 < \ locust20010214_Spontaneous_1_tetB_u1.txt | ./aspa_mst_plot --what=lrank
+
+We then obtain a graph looking like:
+
+![img](fig/locust20010214_Spontaneous_1_tetB_u1_lrank.png)
 
