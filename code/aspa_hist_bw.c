@@ -121,7 +121,7 @@ int read_args(int argc, char ** argv,
     "     (default set to the number of observations divided by 5).\n"
     "  -h --help: prints this message.\n"
     " The program reads data from the 'stdin' (in text format),\n"
-    " the first line should contain the number of observations (integer)"
+    " the first line should contain the number of observations (integer)\n"
     " the following lines should contain the observations, one per line\n"
     " in decimal notation. If a log transformed of the data is requested\n"
     " it is applied first. Then a sequence of histograms with number of\n"

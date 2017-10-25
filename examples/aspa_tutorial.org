@@ -702,3 +702,120 @@ plot 'locust20010214_Spontaneous_1_tetB_u1.lrank' using 1:2 with dots
 
 #+RESULTS:
 [[file:fig/locust20010214_Spontaneous_1_tetB_u1_lrank.png]]
+** Histograms
+A cross-validation based binwidth selection is implemented in =aspa=. It follows Mats Rudemo "Empirical Choice of Histograms and Kernel Density Estimators" (/Scandinavian Journal of Statistics/ *9*:65-78, 1982) approach. In short given a sample of inter spike intervals (ISI), a cross validation score approximating the integrated mean squared error (between the estimated density and the true one) is computed for a sequence of binwidths (or equivalently number of bins). This curve score vs number of bins can be plotted and the the "best" choice is the number of bins minimizing it. An example follows in the next sub-section.
+
+*** Getting the cross validation score   
+We first get the ISI sample using function =aspa_mst_isi= whose description is:
+
+#+NAME: aspa_mst_isi-help
+#+BEGIN_SRC sh :exports both :results output
+./aspa_mst_isi --help
+#+END_SRC
+
+#+RESULTS: aspa_mst_isi-help
+: usage: ./aspa_mst_isi [-b --bin] [-h --help]
+: 
+:   -b --bin: the data read from the 'stdin' are in binary format.
+:   -h --help: prints this message.
+:  The program reads data from the 'stdin' (default in text format)
+:  most likely resulting from a call to 'aspa_read_spike_train',
+:  gets the inter spike intervals and writes the number of ISIs
+:  followed by the individual ISIs (one per line) to the stdout
+: 
+
+We use it as follows, storing the obtained ISI sample in a file named =u1isi1.txt=:
+
+#+NAME: aspa_mst_isi-use
+#+BEGIN_SRC sh :exports both :results output
+./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+			locust20010214_Spontaneous_1_tetB_u1.txt | \
+    ./aspa_mst_isi > u1isi1.txt
+#+END_SRC
+
+#+RESULTS: aspa_mst_isi-use
+
+We can check the head of the generated file with =head=:
+
+#+NAME: u1isi1.txt-head
+#+BEGIN_SRC sh :exports both :results output
+head u1isi1.txt
+#+END_SRC
+
+#+RESULTS: u1isi1.txt-head
+#+begin_example
+3303
+3.03414
+0.04354
+0.03056
+0.0255599
+0.02651
+0.0622902
+0.13791
+0.11336
+1.01958
+#+end_example
+
+We use next function =aspa_hist_bw= whose description is:
+
+#+NAME: aspa_hist_bw-help
+#+BEGIN_SRC sh :exports both :results output
+./aspa_hist_bw --help
+#+END_SRC
+
+#+RESULTS: aspa_hist_bw-help
+#+begin_example
+usage: ./aspa_hist_bw [-l --log] [-f --from=integer]
+          [-t --to=integer] [-h --help]
+
+  -l --log: should the log of the observations be used?
+  -f --from <positive integer>: the smallest number of bins to explore
+     (default set to 2).
+  -t --to <positive integer>: the largest number of bins to explore
+     (default set to the number of observations divided by 5).
+  -h --help: prints this message.
+ The program reads data from the 'stdin' (in text format),
+ the first line should contain the number of observations (integer)
+ the following lines should contain the observations, one per line
+ in decimal notation. If a log transformed of the data is requested
+ it is applied first. Then a sequence of histograms with number of
+ bins variying between from and to (inclusive) is contructed. For each
+ histogram, the empirical bin probability (bin count divided by sample
+ size), p_hat_i for each bin i is obtained and the score is computed as
+ follows: (2-(n+1) * sum(p_hat_i^2))*m/(n-1) where m is the number of
+ bins and where the summation is done over the bins. The best number
+ of bins is the one giving the smallest score.
+ The program prints to the 'stdout' the number of bins and the
+ corresponding cross-validation scores on two columns.
+
+#+end_example
+
+On the ISI sample we just got that gives (using the log of the observations to limit the consequences of the skewness of the distribution):
+
+#+NAME: aspa_hist_bw-with-u1isi1.txt
+#+BEGIN_SRC sh :exports both :results output
+./aspa_hist_bw --log < u1isi1.txt > u1bw1.txt
+#+END_SRC
+
+#+RESULTS: aspa_hist_bw-with-u1isi1.txt
+: Sample size: 3303
+: Exploring now number of bins between 2 and 330.
+: Using a log transformation of the data.
+: Histograms will be built between -4.15413 and 1.50993.
+: The best number of bins is: 46 giving a score of -2.07509
+
+Using =gnuplot= we quickly visualize the curve:
+
+#+NAME: u1bw1-fig
+#+HEADERS: :file fig/locust20010214_Spontaneous_1_tetB_u1_bw.png  
+#+BEGIN_SRC gnuplot :exports both :session *gnuplot* :eval no-export
+set grid
+unset key
+set xlabel 'Number of bins'
+set ylabel 'Cross validation score'
+plot 'u1bw1.txt' using 1:2 with lines lc 'black'\
+     linewidth 2
+#+END_SRC
+
+#+RESULTS: u1bw1-fig
+[[file:fig/locust20010214_Spontaneous_1_tetB_u1_bw.png]]
