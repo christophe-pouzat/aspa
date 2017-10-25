@@ -187,6 +187,7 @@ We will start by downloading the spike train from unit 1 from =group=
 =PDF= version of this document, when typing directly to the shell you
 don't need these line breaks):
 
+#+NAME: download-u1-data-from-spont1-locust20010214
 #+BEGIN_SRC sh :exports both :results output
 wget https://raw.githubusercontent.com/christophe-pouzat/\
 zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/\
@@ -766,13 +767,14 @@ We use next function =aspa_hist_bw= whose description is:
 #+RESULTS: aspa_hist_bw-help
 #+begin_example
 usage: ./aspa_hist_bw [-l --log] [-f --from=integer]
-          [-t --to=integer] [-h --help]
+          [-t --to=integer] [-b --best] [-h --help]
 
   -l --log: should the log of the observations be used?
   -f --from <positive integer>: the smallest number of bins to explore
      (default set to 2).
   -t --to <positive integer>: the largest number of bins to explore
      (default set to the number of observations divided by 5).
+  -b --best: should only the best number of bins be printed to the 'stdout'?
   -h --help: prints this message.
  The program reads data from the 'stdin' (in text format),
  the first line should contain the number of observations (integer)
@@ -786,7 +788,8 @@ usage: ./aspa_hist_bw [-l --log] [-f --from=integer]
  bins and where the summation is done over the bins. The best number
  of bins is the one giving the smallest score.
  The program prints to the 'stdout' the number of bins and the
- corresponding cross-validation scores on two columns.
+ corresponding cross-validation scores on two columns (default)
+  or only the best number of bins if 'best' is used as an argument.
 
 #+end_example
 
@@ -819,3 +822,302 @@ plot 'u1bw1.txt' using 1:2 with lines lc 'black'\
 
 #+RESULTS: u1bw1-fig
 [[file:fig/locust20010214_Spontaneous_1_tetB_u1_bw.png]]
+
+*** Building the histogram
+
+Once the "best" number of bins is known (or at least one has decided on the number of bins to use), we call =aspa_hist= to construct the histogram. Its description is:
+
+#+NAME: aspa_hist-help
+#+BEGIN_SRC sh :exports both :results output
+./aspa_hist --help
+#+END_SRC
+
+#+RESULTS: aspa_hist-help
+#+begin_example
+usage: ./aspa_hist -n --n_bins=integer [-l --log] 
+          [-p --prob] [-h --help]
+
+  -n --n_bins <positive integer>: the number of bins to use.
+  -l --log: should the log of the observations be used?
+  -p --prob: should the result be normalized so that the
+     the histogram integral is one?
+  -h --help: prints this message.
+ The program reads data from the 'stdin' (in text format),
+ the first line should contain the number of observations (integer)
+ the following lines should contain the observations, one per line
+ in decimal notation. If a log transformed of the data is requested
+ it is applied first. Then a histogram with 'n_bins' bins is contructed.
+ If a log transformation was used, the bins boundaries are transformed
+ back to the original scale. If argument 'prob' is specified, the histogram
+ is normalized such that its integral is one (it becomes of proper PDF
+ estimator), otherwise the bin counts are kept.
+ The program prints to the 'stdout' on 3 columns: the left bin boundary;
+ the right bin boundary; the bin count or bin frequency (depending on the
+ specification of argument 'prob').
+
+#+end_example
+
+Using the previous ISI sample and the best number of bins we construct the histogram and save it in file =u1hist1.txt= with:
+
+#+NAME: aspa_hist-use
+#+BEGIN_SRC sh :exports both :results output
+./aspa_hist -n 46 -p --log < u1isi1.txt > u1hist1.txt
+#+END_SRC
+
+#+RESULTS: aspa_hist-use
+: Sample size: 3303
+: Using a log transformation of the data.
+
+The plot of the histogram with =gnuplot= is then done as follows:
+
+#+NAME: u1hist1-fig
+#+HEADERS: :file fig/locust20010214_Spontaneous_1_tetB_u1_isi_hist.png  
+#+BEGIN_SRC gnuplot :exports both :session *gnuplot* :eval no-export
+set grid
+unset key
+set title 'ISI density estimate neuron 1 spont. 1'
+set xlabel 'Inter spike interval (s)'
+set ylabel 'Estimated density (1/s)'
+plot [0:0.5] [] 'u1hist1.txt' using 1:3 with steps lc 'black'\
+     linewidth 2
+#+END_SRC
+
+#+RESULTS: u1hist1-fig
+[[file:fig/locust20010214_Spontaneous_1_tetB_u1_isi_hist.png]]
+
+** ISI histograms of the seven "good" neuron of dataset =locust20010214=
+
+We can proceed and compute the ISI histograms of the 6 other good neurons of the experiment. We start by downloading the data with:
+
+#+NAME: download-u2-to-u7-data-from-spont1-locust20010214
+#+BEGIN_SRC sh :exports code :results output
+prefix=https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis
+prefix="$prefix"/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/
+prefix="$prefix"locust20010214_Spontaneous_1_tetB_u
+for i in {2..7} ; do
+    wget "$prefix"$i".txt"
+done
+#+END_SRC
+
+#+RESULTS: download-u2-to-u7-data-from-spont1-locust20010214
+#+begin_example
+--2017-10-25 17:42:17--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u2.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 30090 (29K) [text/plain]
+Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u2.txt »
+
+     0K .......... .......... .........                       100% 10,9M=0,003s
+
+2017-10-25 17:42:17 (10,9 MB/s) — « locust20010214_Spontaneous_1_tetB_u2.txt » sauvegardé [30090/30090]
+
+--2017-10-25 17:42:18--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u3.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 11487 (11K) [text/plain]
+Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u3.txt »
+
+     0K .......... .                                          100% 17,5M=0,001s
+
+2017-10-25 17:42:18 (17,5 MB/s) — « locust20010214_Spontaneous_1_tetB_u3.txt » sauvegardé [11487/11487]
+
+--2017-10-25 17:42:18--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u4.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 16047 (16K) [text/plain]
+Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u4.txt »
+
+     0K .......... .....                                      100% 10,5M=0,001s
+
+2017-10-25 17:42:18 (10,5 MB/s) — « locust20010214_Spontaneous_1_tetB_u4.txt » sauvegardé [16047/16047]
+
+--2017-10-25 17:42:18--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u5.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 41264 (40K) [text/plain]
+Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u5.txt »
+
+     0K .......... .......... .......... ..........           100% 9,17M=0,004s
+
+2017-10-25 17:42:18 (9,17 MB/s) — « locust20010214_Spontaneous_1_tetB_u5.txt » sauvegardé [41264/41264]
+
+--2017-10-25 17:42:18--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u6.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 7828 (7,6K) [text/plain]
+Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u6.txt »
+
+     0K .......                                               100% 25,5M=0s
+
+2017-10-25 17:42:19 (25,5 MB/s) — « locust20010214_Spontaneous_1_tetB_u6.txt » sauvegardé [7828/7828]
+
+--2017-10-25 17:42:19--  https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/locust20010214_Spontaneous_1_tetB_u7.txt
+Certificat de l'autorité de certification « /etc/ssl/certs/ca-certificates.crt » chargé
+Résolution de raw.githubusercontent.com… 151.101.92.133
+Connexion à raw.githubusercontent.com|151.101.92.133|:443… connecté.
+requête HTTP transmise, en attente de la réponse… 200 OK
+Taille : 34966 (34K) [text/plain]
+Sauvegarde en : « locust20010214_Spontaneous_1_tetB_u7.txt »
+
+     0K .......... .......... .......... ....                 100% 10,4M=0,003s
+
+2017-10-25 17:42:19 (10,4 MB/s) — « locust20010214_Spontaneous_1_tetB_u7.txt » sauvegardé [34966/34966]
+
+#+end_example
+
+We now get the ISIs stored in files names =uXisi1.txt= where =X= takes successively values 2 to 7:
+
+#+NAME: get-ISI-spontaneous1-u2-to-u7
+#+BEGIN_SRC sh :exports both :results output
+file_name=locust20010214_Spontaneous_1_tetB_u
+for i in {2..7} ; do
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+			"$file_name"$i".txt" | \
+	./aspa_mst_isi > "u"$i"isi1.txt"
+done
+#+END_SRC
+
+#+RESULTS: get-ISI-spontaneous1-u2-to-u7
+
+We check if some ISI values are null:
+
+#+NAME: check-null-isi-spontaneous1-u1-to-u7
+#+BEGIN_SRC sh :exports both :results output
+for i in {1..7} ; do
+    in="u"$i"isi1.txt"
+    sed -n '2,$p' < $in > dump
+    echo "Unit" $i "has" $(grep "0$" < dump | wc -l) \
+	 "ISIs equal to zero among" $(($(wc -l < $in) - 1))
+done
+#+END_SRC
+
+#+RESULTS: check-null-isi-spontaneous1-u1-to-u7
+: Unit 1 has 0 ISIs equal to zero among 3303
+: Unit 2 has 0 ISIs equal to zero among 3574
+: Unit 3 has 0 ISIs equal to zero among 1339
+: Unit 4 has 0 ISIs equal to zero among 1890
+: Unit 5 has 4 ISIs equal to zero among 4912
+: Unit 6 has 0 ISIs equal to zero among 909
+: Unit 7 has 1 ISIs equal to zero among 4155
+ 
+Since these null ISIs are always making less than a thousands of the sample size, we remove them. We just have to be careful since the first line of the ISI files contains the number of events. It should therefore be changed if we remove lines:
+
+#+NAME: remove-null-isi-from-u1-and-u7
+#+BEGIN_SRC sh :exports both :results output
+for i in {1..7} ; do
+    # in contains input file name
+    in="u"$i"isi1.txt"
+    # remove first line of in and save result in dump
+    sed -n '2,$p' < $in > dump
+    # check how many lines with just 0 dump contains
+    zero=$(grep "0$" < dump | wc -l)
+    if [[ $zero != 0 ]] ; then
+       # if there are lines with just zero remove them
+       sed -i "/0$/d" $in
+       # compute the new number of events in two steps
+       original=$(sed -n '1p' < $in)
+       new=$(($original - $zero))
+       # update the number of events
+       sed -i "1s/.*/$new/" $in
+    fi
+done
+#+END_SRC
+
+#+RESULTS: remove-null-isi-from-u1-and-u7
+
+We can then construct the ISI histograms (output not shown):
+ 
+#+NAME: get-ISI-hist-spontaneous1-u1-to-u7  
+#+BEGIN_SRC sh :exports code :results output
+for i in {1..7} ; do
+    in="u"$i"isi1.txt"
+    out="u"$i"_isi_dens1.txt"
+    n=$(./aspa_hist_bw --best --log < $in)
+    ./aspa_hist --n_bins=$n --log --prob < $in > $out
+done
+#+END_SRC
+
+#+RESULTS: get-ISI-hist-spontaneous1-u1-to-u7
+#+begin_example
+Sample size: 3303
+Exploring now number of bins between 2 and 330.
+Using a log transformation of the data.
+Histograms will be built between -4.15413 and 1.50993.
+The best number of bins is: 46 giving a score of -2.07509
+Sample size: 3303
+Using a log transformation of the data.
+Sample size: 3574
+Exploring now number of bins between 2 and 357.
+Using a log transformation of the data.
+Histograms will be built between -5.36657 and 1.34706.
+The best number of bins is: 57 giving a score of -2.32044
+Sample size: 3574
+Using a log transformation of the data.
+Sample size: 1339
+Exploring now number of bins between 2 and 133.
+Using a log transformation of the data.
+Histograms will be built between -5.80906 and 1.99318.
+The best number of bins is: 26 giving a score of -1.81599
+Sample size: 1339
+Using a log transformation of the data.
+Sample size: 1890
+Exploring now number of bins between 2 and 189.
+Using a log transformation of the data.
+Histograms will be built between -5.95235 and 1.70152.
+The best number of bins is: 28 giving a score of -1.77396
+Sample size: 1890
+Using a log transformation of the data.
+Sample size: 4908
+Exploring now number of bins between 2 and 490.
+Using a log transformation of the data.
+Histograms will be built between -9.20898 and 0.848055.
+The best number of bins is: 75 giving a score of -3.35658
+Sample size: 4908
+Using a log transformation of the data.
+Sample size: 909
+Exploring now number of bins between 2 and 90.
+Using a log transformation of the data.
+Histograms will be built between -4.3505 and 2.09433.
+The best number of bins is: 12 giving a score of -1.35576
+Sample size: 909
+Using a log transformation of the data.
+Sample size: 4154
+Exploring now number of bins between 2 and 415.
+Using a log transformation of the data.
+Histograms will be built between -6.43758 and 1.06502.
+The best number of bins is: 74 giving a score of -2.41961
+Sample size: 4154
+Using a log transformation of the data.
+#+end_example
+
+
+We can now make a graph with all the estimated ISI densities as follows:
+
+#+NAME: u1-to-7-isi-dens1-fig
+#+HEADERS: :file fig/locust20010214_Spontaneous_1_tetB_u1_7_isi_dens.png  
+#+BEGIN_SRC gnuplot :exports both :session *gnuplot* :eval no-export
+set grid
+set title 'ISI density estimate for neurons 1 to 7 spont. 1'
+set xlabel 'Inter spike interval (s)'
+set ylabel 'Estimated density (1/s)'
+plot [0:0.5] [0:20] 'u1_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+     'u2_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+     'u3_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+     'u4_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+     'u5_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+     'u6_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+     'u7_isi_dens1.txt' using 1:3 with steps linewidth 2
+#+END_SRC
+
+#+RESULTS: u1-to-7-isi-dens1-fig
+[[file:fig/locust20010214_Spontaneous_1_tetB_u1_7_isi_dens.png]]

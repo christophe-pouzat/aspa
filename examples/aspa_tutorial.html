@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2017-10-25 mer. 16:17 -->
+<!-- 2017-10-25 mer. 20:06 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><i>Analyse des séquences de potentiels d'action</i> Tutorial</title>
@@ -250,25 +250,27 @@ for the JavaScript code in this tag.
 <li><a href="#basic-statistics">4.2. Basic statistics</a></li>
 <li><a href="#basic-plots">4.3. Basic plots</a>
 <ul>
-<li><a href="#orgd77cf80">4.3.1. Raster plot</a></li>
-<li><a href="#org413f91d">4.3.2. A fancy trick</a></li>
-<li><a href="#org79e5f96">4.3.3. Counting process plots</a></li>
-<li><a href="#org1e194b7">4.3.4. Lagged ranked ISI plot</a></li>
+<li><a href="#orgf55a4e4">4.3.1. Raster plot</a></li>
+<li><a href="#org4be2e26">4.3.2. A fancy trick</a></li>
+<li><a href="#org5674929">4.3.3. Counting process plots</a></li>
+<li><a href="#orgbcc9162">4.3.4. Lagged ranked ISI plot</a></li>
 </ul>
 </li>
-<li><a href="#org847fbc4">4.4. Histograms</a>
+<li><a href="#orge512464">4.4. Histograms</a>
 <ul>
-<li><a href="#org1723519">4.4.1. Getting the cross validation score</a></li>
+<li><a href="#orgabb3fe3">4.4.1. Getting the cross validation score</a></li>
+<li><a href="#orgbedd3c8">4.4.2. Building the histogram</a></li>
 </ul>
 </li>
+<li><a href="#org82a1f91">4.5. ISI histograms of the seven "good" neuron of dataset <code>locust20010214</code></a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org3f96b2b" class="outline-2">
-<h2 id="the-idea-motivating-this-development"><a id="org3f96b2b"></a><span class="section-number-2">1</span> The idea motivating this development</h2>
+<div id="outline-container-orgf9e0c7e" class="outline-2">
+<h2 id="the-idea-motivating-this-development"><a id="orgf9e0c7e"></a><span class="section-number-2">1</span> The idea motivating this development</h2>
 <div class="outline-text-2" id="text-the-idea-motivating-this-development">
 <p>
 The idea here is to implement the Unix/Linux "philosophy"&#x2013;as exposed
@@ -285,8 +287,8 @@ are going to use <a href="http://gnuplot.info/">gnuplot</a>.
 </div>
 </div>
 
-<div id="outline-container-orgd575633" class="outline-2">
-<h2 id="required-software"><a id="orgd575633"></a><span class="section-number-2">2</span> Required software</h2>
+<div id="outline-container-org6e2ede4" class="outline-2">
+<h2 id="required-software"><a id="org6e2ede4"></a><span class="section-number-2">2</span> Required software</h2>
 <div class="outline-text-2" id="text-required-software">
 <p>
 The code will be written mostly in <code>C</code>. If you want a clear and quick
@@ -311,8 +313,8 @@ For now the compilation requires either <code>make</code> or <a href="http://sco
 </p>
 </div>
 
-<div id="outline-container-orgccfc4d4" class="outline-3">
-<h3 id="getting-and-compiling-the-code"><a id="orgccfc4d4"></a><span class="section-number-3">2.1</span> Getting and compiling the code</h3>
+<div id="outline-container-orgaea7fd7" class="outline-3">
+<h3 id="getting-and-compiling-the-code"><a id="orgaea7fd7"></a><span class="section-number-3">2.1</span> Getting and compiling the code</h3>
 <div class="outline-text-3" id="text-getting-and-compiling-the-code">
 <p>
 The code is hosted on
@@ -379,8 +381,8 @@ After that, you're in business.
 </div>
 </div>
 
-<div id="outline-container-orgb6a136d" class="outline-2">
-<h2 id="data-used"><a id="orgb6a136d"></a><span class="section-number-2">3</span> Data used</h2>
+<div id="outline-container-org5f83395" class="outline-2">
+<h2 id="data-used"><a id="org5f83395"></a><span class="section-number-2">3</span> Data used</h2>
 <div class="outline-text-2" id="text-data-used">
 <p>
 We are going to use spike trains obtained from the antennal lobe&#x2013;the first
@@ -396,8 +398,8 @@ can be found at the following address:
 </p>
 </div>
 
-<div id="outline-container-orgd7545ec" class="outline-3">
-<h3 id="getting-a-spike-train"><a id="orgd7545ec"></a><span class="section-number-3">3.1</span> Getting a spike train</h3>
+<div id="outline-container-org43f78ee" class="outline-3">
+<h3 id="getting-a-spike-train"><a id="org43f78ee"></a><span class="section-number-3">3.1</span> Getting a spike train</h3>
 <div class="outline-text-3" id="text-getting-a-spike-train">
 <p>
 We will start by downloading the spike train from unit 1 from <code>group</code>
@@ -408,7 +410,7 @@ don't need these line breaks):
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh">wget https://raw.githubusercontent.com/christophe-pouzat/<span style="color: #ad7fa8; font-style: italic;">\</span>
+<pre class="src src-sh" id="org0319512">wget https://raw.githubusercontent.com/christophe-pouzat/<span style="color: #ad7fa8; font-style: italic;">\</span>
 zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/<span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214/locust20010214_spike_trains/<span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214_Spontaneous_1_tetB_u1.txt
@@ -441,13 +443,13 @@ sorting description</a> of this data set.
 </div>
 </div>
 
-<div id="outline-container-org717510d" class="outline-2">
-<h2 id="preliminary-analysis"><a id="org717510d"></a><span class="section-number-2">4</span> Preliminary analysis</h2>
+<div id="outline-container-org6f7f987" class="outline-2">
+<h2 id="preliminary-analysis"><a id="org6f7f987"></a><span class="section-number-2">4</span> Preliminary analysis</h2>
 <div class="outline-text-2" id="text-preliminary-analysis">
 </div>
 
-<div id="outline-container-org3fea97c" class="outline-3">
-<h3 id="reading-the-data"><a id="org3fea97c"></a><span class="section-number-3">4.1</span> Reading the data</h3>
+<div id="outline-container-orgae9447f" class="outline-3">
+<h3 id="reading-the-data"><a id="orgae9447f"></a><span class="section-number-3">4.1</span> Reading the data</h3>
 <div class="outline-text-3" id="text-reading-the-data">
 <p>
 In is not expected that the data (spike trains) one wants to work with
@@ -608,8 +610,8 @@ interactively you can type:
 </div>
 </div>
 
-<div id="outline-container-org51aaa58" class="outline-3">
-<h3 id="basic-statistics"><a id="org51aaa58"></a><span class="section-number-3">4.2</span> Basic statistics</h3>
+<div id="outline-container-org0c3855f" class="outline-3">
+<h3 id="basic-statistics"><a id="org0c3855f"></a><span class="section-number-3">4.2</span> Basic statistics</h3>
 <div class="outline-text-3" id="text-basic-statistics">
 <p>
 Program <code>aspa_mst_fns</code> (<code>mst</code> stands for "multiple spike trains" and
@@ -618,7 +620,7 @@ A description of its use is obtained by calling the program with the <code>--hel
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org4e8cf09">./aspa_mst_fns --help
+<pre class="src src-sh" id="org12e98e1">./aspa_mst_fns --help
 </pre>
 </div>
 
@@ -636,7 +638,7 @@ We can call this function directly on the output of <code>aspa_read_spike_train<
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org1d252bc">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+<pre class="src src-sh" id="orge20fc16">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214_Spontaneous_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
 ./aspa_mst_fns
 </pre>
@@ -658,15 +660,15 @@ A 95% confidence interval for the lag 1 Spearman rank correlation is: [0.400336,
 </div>
 
 
-<div id="outline-container-orgd0ed6b4" class="outline-3">
-<h3 id="basic-plots"><a id="orgd0ed6b4"></a><span class="section-number-3">4.3</span> Basic plots</h3>
+<div id="outline-container-orged055af" class="outline-3">
+<h3 id="basic-plots"><a id="orged055af"></a><span class="section-number-3">4.3</span> Basic plots</h3>
 <div class="outline-text-3" id="text-basic-plots">
 <p>
 There are several plots one might want to create at an early stage of spike train data analysis. Since most of these plots are more "attractive" when built from data with a response to a stimulus, we will start by getting one such case (from the same experiment and same neuron):
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="orgf6dda33">wget https://raw.githubusercontent.com/christophe-pouzat/<span style="color: #ad7fa8; font-style: italic;">\</span>
+<pre class="src src-sh" id="orgacfdd2c">wget https://raw.githubusercontent.com/christophe-pouzat/<span style="color: #ad7fa8; font-style: italic;">\</span>
 zenodo-locust-datasets-analysis/master/Locust_Analysis_with_R/<span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214/locust20010214_spike_trains/<span style="color: #ad7fa8; font-style: italic;">\</span>
 locust20010214_C3H_1_tetB_u1.txt
@@ -693,7 +695,7 @@ This file contains the responses to 25 stimulations with <code>cis-3-hexen-1-ol<
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org2989054">./aspa_mst_plot --help
+<pre class="src src-sh" id="org54a33a8">./aspa_mst_plot --help
 </pre>
 </div>
 
@@ -724,8 +726,8 @@ lag of isi i.
 </div>
 
 
-<div id="outline-container-orgd77cf80" class="outline-4">
-<h4 id="orgd77cf80"><span class="section-number-4">4.3.1</span> Raster plot</h4>
+<div id="outline-container-orgf55a4e4" class="outline-4">
+<h4 id="orgf55a4e4"><span class="section-number-4">4.3.1</span> Raster plot</h4>
 <div class="outline-text-4" id="text-4-3-1">
 <p>
 Here, to get the classical raster we do:
@@ -775,8 +777,8 @@ Here instead of the "new window output" we generated at text output (that's what
 </div>
 </div>
 
-<div id="outline-container-org413f91d" class="outline-4">
-<h4 id="org413f91d"><span class="section-number-4">4.3.2</span> A fancy trick</h4>
+<div id="outline-container-org4be2e26" class="outline-4">
+<h4 id="org4be2e26"><span class="section-number-4">4.3.2</span> A fancy trick</h4>
 <div class="outline-text-4" id="text-4-3-2">
 <p>
 We can also make the raster plot and get the basic stats printed at once with the <a href="https://www.gnu.org/software/coreutils/manual/html_node/tee-invocation.html">tee</a> command as follows:
@@ -791,8 +793,8 @@ locust20010214_C3H_1_tetB_u1.txt | tee &gt;(aspa_mst_plot --what=raster) | <span
 </div>
 </div>
 
-<div id="outline-container-org79e5f96" class="outline-4">
-<h4 id="org79e5f96"><span class="section-number-4">4.3.3</span> Counting process plots</h4>
+<div id="outline-container-org5674929" class="outline-4">
+<h4 id="org5674929"><span class="section-number-4">4.3.3</span> Counting process plots</h4>
 <div class="outline-text-4" id="text-4-3-3">
 <p>
 There are several ways to create a "counting process" plot. The first one, used mainly for checking data stationarity is building the "true" observed counting process plot, that is at each spike time the step function jumps by one unit and successive trials are shown one after the other as they <i>actually</i> occurred. This is what is specified with argument <code>cp_rt</code> to option <code>what</code>:
@@ -906,8 +908,8 @@ Then within <code>gnuplot</code>:
 </div>
 </div>
 
-<div id="outline-container-org1e194b7" class="outline-4">
-<h4 id="org1e194b7"><span class="section-number-4">4.3.4</span> Lagged ranked ISI plot</h4>
+<div id="outline-container-orgbcc9162" class="outline-4">
+<h4 id="orgbcc9162"><span class="section-number-4">4.3.4</span> Lagged ranked ISI plot</h4>
 <div class="outline-text-4" id="text-4-3-4">
 <p>
 Coming back to the spontaneous data, a good graphical way to look for correlations between successive inter spike intervals is to rank them (from the smallest to the largest) before plotting the rank of interval i+lag against the rank of interval i. We can do that with the spontaneous data as follows:
@@ -930,23 +932,23 @@ We then obtain a graph looking like:
 </div>
 </div>
 </div>
-<div id="outline-container-org847fbc4" class="outline-3">
-<h3 id="org847fbc4"><span class="section-number-3">4.4</span> Histograms</h3>
+<div id="outline-container-orge512464" class="outline-3">
+<h3 id="orge512464"><span class="section-number-3">4.4</span> Histograms</h3>
 <div class="outline-text-3" id="text-4-4">
 <p>
 A cross-validation based binwidth selection is implemented in <code>aspa</code>. It follows Mats Rudemo "Empirical Choice of Histograms and Kernel Density Estimators" (<i>Scandinavian Journal of Statistics</i> <b>9</b>:65-78, 1982) approach. In short given a sample of inter spike intervals (ISI), a cross validation score approximating the integrated mean squared error (between the estimated density and the true one) is computed for a sequence of binwidths (or equivalently number of bins). This curve score vs number of bins can be plotted and the the "best" choice is the number of bins minimizing it. An example follows in the next sub-section.
 </p>
 </div>
 
-<div id="outline-container-org1723519" class="outline-4">
-<h4 id="org1723519"><span class="section-number-4">4.4.1</span> Getting the cross validation score</h4>
+<div id="outline-container-orgabb3fe3" class="outline-4">
+<h4 id="orgabb3fe3"><span class="section-number-4">4.4.1</span> Getting the cross validation score</h4>
 <div class="outline-text-4" id="text-4-4-1">
 <p>
 We first get the ISI sample using function <code>aspa_mst_isi</code> whose description is:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org8a739ed">./aspa_mst_isi --help
+<pre class="src src-sh" id="org80755ce">./aspa_mst_isi --help
 </pre>
 </div>
 
@@ -968,7 +970,7 @@ We use it as follows, storing the obtained ISI sample in a file named <code>u1is
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org11290b5">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+<pre class="src src-sh" id="org98cfe73">./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
                         locust20010214_Spontaneous_1_tetB_u1.txt | <span style="color: #ad7fa8; font-style: italic;">\</span>
     ./aspa_mst_isi &gt; u1isi1.txt
 </pre>
@@ -979,7 +981,7 @@ We can check the head of the generated file with <code>head</code>:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org44790a4">head u1isi1.txt
+<pre class="src src-sh" id="org4cc21ea">head u1isi1.txt
 </pre>
 </div>
 
@@ -1001,19 +1003,20 @@ We use next function <code>aspa_hist_bw</code> whose description is:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="orgf2ee835">./aspa_hist_bw --help
+<pre class="src src-sh" id="org9f0a32d">./aspa_hist_bw --help
 </pre>
 </div>
 
 <pre class="example">
 usage: ./aspa_hist_bw [-l --log] [-f --from=integer]
-          [-t --to=integer] [-h --help]
+          [-t --to=integer] [-b --best] [-h --help]
 
   -l --log: should the log of the observations be used?
   -f --from &lt;positive integer&gt;: the smallest number of bins to explore
      (default set to 2).
   -t --to &lt;positive integer&gt;: the largest number of bins to explore
      (default set to the number of observations divided by 5).
+  -b --best: should only the best number of bins be printed to the 'stdout'?
   -h --help: prints this message.
  The program reads data from the 'stdin' (in text format),
  the first line should contain the number of observations (integer)
@@ -1027,7 +1030,8 @@ usage: ./aspa_hist_bw [-l --log] [-f --from=integer]
  bins and where the summation is done over the bins. The best number
  of bins is the one giving the smallest score.
  The program prints to the 'stdout' the number of bins and the
- corresponding cross-validation scores on two columns.
+ corresponding cross-validation scores on two columns (default)
+  or only the best number of bins if 'best' is used as an argument.
 
 </pre>
 
@@ -1036,7 +1040,7 @@ On the ISI sample we just got that gives (using the log of the observations to l
 </p>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org60b6c06">./aspa_hist_bw --log &lt; u1isi1.txt &gt; u1bw1.txt
+<pre class="src src-sh" id="orgab4eda7">./aspa_hist_bw --log &lt; u1isi1.txt &gt; u1bw1.txt
 </pre>
 </div>
 
@@ -1054,7 +1058,7 @@ Using <code>gnuplot</code> we quickly visualize the curve:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-gnuplot" id="org3783079"><span style="color: #8ae234;">set</span> grid
+<pre class="src src-gnuplot" id="org14a621a"><span style="color: #8ae234;">set</span> grid
 <span style="color: #8ae234;">unset</span> key
 <span style="color: #8ae234;">set</span> xlabel <span style="color: #ad7fa8; font-style: italic;">'Number of bins'</span>
 <span style="color: #8ae234;">set</span> ylabel <span style="color: #ad7fa8; font-style: italic;">'Cross validation score'</span>
@@ -1070,12 +1074,209 @@ Using <code>gnuplot</code> we quickly visualize the curve:
 </div>
 </div>
 </div>
+
+<div id="outline-container-orgbedd3c8" class="outline-4">
+<h4 id="orgbedd3c8"><span class="section-number-4">4.4.2</span> Building the histogram</h4>
+<div class="outline-text-4" id="text-4-4-2">
+<p>
+Once the "best" number of bins is known (or at least one has decided on the number of bins to use), we call <code>aspa_hist</code> to construct the histogram. Its description is:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="org749fb95">./aspa_hist --help
+</pre>
+</div>
+
+<pre class="example">
+usage: ./aspa_hist -n --n_bins=integer [-l --log] 
+          [-p --prob] [-h --help]
+
+  -n --n_bins &lt;positive integer&gt;: the number of bins to use.
+  -l --log: should the log of the observations be used?
+  -p --prob: should the result be normalized so that the
+     the histogram integral is one?
+  -h --help: prints this message.
+ The program reads data from the 'stdin' (in text format),
+ the first line should contain the number of observations (integer)
+ the following lines should contain the observations, one per line
+ in decimal notation. If a log transformed of the data is requested
+ it is applied first. Then a histogram with 'n_bins' bins is contructed.
+ If a log transformation was used, the bins boundaries are transformed
+ back to the original scale. If argument 'prob' is specified, the histogram
+ is normalized such that its integral is one (it becomes of proper PDF
+ estimator), otherwise the bin counts are kept.
+ The program prints to the 'stdout' on 3 columns: the left bin boundary;
+ the right bin boundary; the bin count or bin frequency (depending on the
+ specification of argument 'prob').
+
+</pre>
+
+<p>
+Using the previous ISI sample and the best number of bins we construct the histogram and save it in file <code>u1hist1.txt</code> with:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="org24418cc">./aspa_hist -n 46 -p --log &lt; u1isi1.txt &gt; u1hist1.txt
+</pre>
+</div>
+
+<pre class="example">
+Sample size: 3303
+Using a log transformation of the data.
+
+</pre>
+
+<p>
+The plot of the histogram with <code>gnuplot</code> is then done as follows:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-gnuplot" id="org9b17d7f"><span style="color: #8ae234;">set</span> grid
+<span style="color: #8ae234;">unset</span> key
+<span style="color: #8ae234;">set</span> <span style="color: #8ae234; font-weight: bold;">title</span> <span style="color: #ad7fa8; font-style: italic;">'ISI density estimate neuron 1 spont. 1'</span>
+<span style="color: #8ae234;">set</span> xlabel <span style="color: #ad7fa8; font-style: italic;">'Inter spike interval (s)'</span>
+<span style="color: #8ae234;">set</span> ylabel <span style="color: #ad7fa8; font-style: italic;">'Estimated density (1/s)'</span>
+<span style="color: #729fcf; font-weight: bold;">plot</span> [<span style="color: #8ae234;">0:0.5</span>] [] <span style="color: #ad7fa8; font-style: italic;">'u1hist1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> lc <span style="color: #ad7fa8; font-style: italic;">'black'</span>\
+     <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="fig/locust20010214_Spontaneous_1_tetB_u1_isi_hist.png" alt="locust20010214_Spontaneous_1_tetB_u1_isi_hist.png" />
+</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org82a1f91" class="outline-3">
+<h3 id="org82a1f91"><span class="section-number-3">4.5</span> ISI histograms of the seven "good" neuron of dataset <code>locust20010214</code></h3>
+<div class="outline-text-3" id="text-4-5">
+<p>
+We can proceed and compute the ISI histograms of the 6 other good neurons of the experiment. We start by downloading the data with:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="orgfd97bca"><span style="color: #ff6347;">prefix</span>=https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis
+<span style="color: #ff6347;">prefix</span>=<span style="color: #ad7fa8; font-style: italic;">"$prefix"</span>/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/
+<span style="color: #ff6347;">prefix</span>=<span style="color: #ad7fa8; font-style: italic;">"$prefix"</span>locust20010214_Spontaneous_1_tetB_u
+<span style="color: #729fcf; font-weight: bold;">for</span> i<span style="color: #729fcf; font-weight: bold;"> in</span> {2..7} ; <span style="color: #729fcf; font-weight: bold;">do</span>
+    wget <span style="color: #ad7fa8; font-style: italic;">"$prefix"</span>$<span style="color: #ff6347;">i</span><span style="color: #ad7fa8; font-style: italic;">".txt"</span>
+<span style="color: #729fcf; font-weight: bold;">done</span>
+</pre>
+</div>
+
+<p>
+We now get the ISIs stored in files names <code>uXisi1.txt</code> where <code>X</code> takes successively values 2 to 7:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="orgaf4500c"><span style="color: #ff6347;">file_name</span>=locust20010214_Spontaneous_1_tetB_u
+<span style="color: #729fcf; font-weight: bold;">for</span> i<span style="color: #729fcf; font-weight: bold;"> in</span> {2..7} ; <span style="color: #729fcf; font-weight: bold;">do</span>
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 &lt; <span style="color: #ad7fa8; font-style: italic;">\</span>
+                        <span style="color: #ad7fa8; font-style: italic;">"$file_name"</span>$<span style="color: #ff6347;">i</span><span style="color: #ad7fa8; font-style: italic;">".txt"</span> | <span style="color: #ad7fa8; font-style: italic;">\</span>
+        ./aspa_mst_isi &gt; <span style="color: #ad7fa8; font-style: italic;">"u"</span>$<span style="color: #ff6347;">i</span><span style="color: #ad7fa8; font-style: italic;">"isi1.txt"</span>
+<span style="color: #729fcf; font-weight: bold;">done</span>
+</pre>
+</div>
+
+<p>
+We check if some ISI values are null:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="orgb4ccd41"><span style="color: #729fcf; font-weight: bold;">for</span> i<span style="color: #729fcf; font-weight: bold;"> in</span> {1..7} ; <span style="color: #729fcf; font-weight: bold;">do</span>
+    <span style="color: #ff6347;">in</span>=<span style="color: #ad7fa8; font-style: italic;">"u"</span>$<span style="color: #ff6347;">i</span><span style="color: #ad7fa8; font-style: italic;">"isi1.txt"</span>
+    sed -n <span style="color: #ad7fa8; font-style: italic;">'2,$p'</span> &lt; $<span style="color: #ff6347;">in</span> &gt; dump
+    <span style="color: #729fcf;">echo</span> <span style="color: #ad7fa8; font-style: italic;">"Unit"</span> $<span style="color: #ff6347;">i</span> <span style="color: #ad7fa8; font-style: italic;">"has"</span> $(<span style="color: #fa8072;">grep</span> <span style="color: #ad7fa8; font-style: italic;">"0$"</span> &lt; dump | wc -l) <span style="color: #ad7fa8; font-style: italic;">\</span>
+         <span style="color: #ad7fa8; font-style: italic;">"ISIs equal to zero among"</span> $(($(<span style="color: #fa8072;">wc</span> -l &lt; $<span style="color: #ff6347;">in</span>) - 1))
+<span style="color: #729fcf; font-weight: bold;">done</span>
+</pre>
+</div>
+
+<pre class="example">
+Unit 1 has 0 ISIs equal to zero among 3303
+Unit 2 has 0 ISIs equal to zero among 3574
+Unit 3 has 0 ISIs equal to zero among 1339
+Unit 4 has 0 ISIs equal to zero among 1890
+Unit 5 has 4 ISIs equal to zero among 4912
+Unit 6 has 0 ISIs equal to zero among 909
+Unit 7 has 1 ISIs equal to zero among 4155
+
+</pre>
+
+<p>
+Since these null ISIs are always making less than a thousands of the sample size, we remove them. We just have to be careful since the first line of the ISI files contains the number of events. It should therefore be changed if we remove lines:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="org10d4d24"><span style="color: #729fcf; font-weight: bold;">for</span> i<span style="color: #729fcf; font-weight: bold;"> in</span> {1..7} ; <span style="color: #729fcf; font-weight: bold;">do</span>
+    <span style="color: #2c5115;"># </span><span style="color: #888a85;">in contains input file name</span>
+    <span style="color: #ff6347;">in</span>=<span style="color: #ad7fa8; font-style: italic;">"u"</span>$<span style="color: #ff6347;">i</span><span style="color: #ad7fa8; font-style: italic;">"isi1.txt"</span>
+    <span style="color: #2c5115;"># </span><span style="color: #888a85;">remove first line of in and save result in dump</span>
+    sed -n <span style="color: #ad7fa8; font-style: italic;">'2,$p'</span> &lt; $<span style="color: #ff6347;">in</span> &gt; dump
+    <span style="color: #2c5115;"># </span><span style="color: #888a85;">check how many lines with just 0 dump contains</span>
+    <span style="color: #ff6347;">zero</span>=$(<span style="color: #fa8072;">grep</span> <span style="color: #ad7fa8; font-style: italic;">"0$"</span> &lt; dump | wc -l)
+    <span style="color: #729fcf; font-weight: bold;">if</span> [[ $<span style="color: #ff6347;">zero</span> != 0 ]] ; <span style="color: #729fcf; font-weight: bold;">then</span>
+       <span style="color: #2c5115;"># </span><span style="color: #888a85;">if there are lines with just zero remove them</span>
+       sed -i <span style="color: #ad7fa8; font-style: italic;">"/0$/d"</span> $<span style="color: #ff6347;">in</span>
+       <span style="color: #2c5115;"># </span><span style="color: #888a85;">compute the new number of events in two steps</span>
+       <span style="color: #ff6347;">original</span>=$(<span style="color: #fa8072;">sed</span> -n <span style="color: #ad7fa8; font-style: italic;">'1p'</span> &lt; $<span style="color: #ff6347;">in</span>)
+       <span style="color: #ff6347;">new</span>=$(($<span style="color: #ff6347;">original</span> - $<span style="color: #ff6347;">zero</span>))
+       <span style="color: #2c5115;"># </span><span style="color: #888a85;">update the number of events</span>
+       sed -i <span style="color: #ad7fa8; font-style: italic;">"1s/.*/$new/"</span> $<span style="color: #ff6347;">in</span>
+    <span style="color: #729fcf; font-weight: bold;">fi</span>
+<span style="color: #729fcf; font-weight: bold;">done</span>
+</pre>
+</div>
+
+<p>
+We can then construct the ISI histograms (output not shown):
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="org0ff2786"><span style="color: #729fcf; font-weight: bold;">for</span> i<span style="color: #729fcf; font-weight: bold;"> in</span> {1..7} ; <span style="color: #729fcf; font-weight: bold;">do</span>
+    <span style="color: #ff6347;">in</span>=<span style="color: #ad7fa8; font-style: italic;">"u"</span>$<span style="color: #ff6347;">i</span><span style="color: #ad7fa8; font-style: italic;">"isi1.txt"</span>
+    <span style="color: #ff6347;">out</span>=<span style="color: #ad7fa8; font-style: italic;">"u"</span>$<span style="color: #ff6347;">i</span><span style="color: #ad7fa8; font-style: italic;">"_isi_dens1.txt"</span>
+    <span style="color: #ff6347;">n</span>=$(<span style="color: #fa8072;">./aspa_hist_bw</span> --best --log &lt; $<span style="color: #ff6347;">in</span>)
+    ./aspa_hist --n_bins=$<span style="color: #ff6347;">n</span> --log --prob &lt; $<span style="color: #ff6347;">in</span> &gt; $<span style="color: #ff6347;">out</span>
+<span style="color: #729fcf; font-weight: bold;">done</span>
+</pre>
+</div>
+
+
+<p>
+We can now make a graph with all the estimated ISI densities as follows:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-gnuplot" id="org76978f6"><span style="color: #8ae234;">set</span> grid
+<span style="color: #8ae234;">set</span> <span style="color: #8ae234; font-weight: bold;">title</span> <span style="color: #ad7fa8; font-style: italic;">'ISI density estimate for neurons 1 to 7 spont. 1'</span>
+<span style="color: #8ae234;">set</span> xlabel <span style="color: #ad7fa8; font-style: italic;">'Inter spike interval (s)'</span>
+<span style="color: #8ae234;">set</span> ylabel <span style="color: #ad7fa8; font-style: italic;">'Estimated density (1/s)'</span>
+<span style="color: #729fcf; font-weight: bold;">plot</span> [<span style="color: #8ae234;">0:0.5</span>] [<span style="color: #8ae234;">0:20</span>] <span style="color: #ad7fa8; font-style: italic;">'u1_isi_dens1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2,\
+     <span style="color: #ad7fa8; font-style: italic;">'u2_isi_dens1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2,\
+     <span style="color: #ad7fa8; font-style: italic;">'u3_isi_dens1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2,\
+     <span style="color: #ad7fa8; font-style: italic;">'u4_isi_dens1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2,\
+     <span style="color: #ad7fa8; font-style: italic;">'u5_isi_dens1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2,\
+     <span style="color: #ad7fa8; font-style: italic;">'u6_isi_dens1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2,\
+     <span style="color: #ad7fa8; font-style: italic;">'u7_isi_dens1.txt'</span> <span style="color: #8ae234; font-weight: bold;">using</span> 1:3 <span style="color: #8ae234; font-weight: bold;">with</span> <span style="color: #edd400; font-weight: bold;">steps</span> <span style="color: #8ae234; font-weight: bold;">linewidth</span> 2
+</pre>
+</div>
+
+
+<div class="figure">
+<p><img src="fig/locust20010214_Spontaneous_1_tetB_u1_7_isi_dens.png" alt="locust20010214_Spontaneous_1_tetB_u1_7_isi_dens.png" />
+</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Christophe Pouzat</p>
-<p class="date">Created: 2017-10-25 mer. 16:17</p>
+<p class="date">Created: 2017-10-25 mer. 20:06</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

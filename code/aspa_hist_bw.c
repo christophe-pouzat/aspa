@@ -16,12 +16,13 @@
 int read_args(int argc, char ** argv,
 	      size_t * use_log,
 	      size_t * from,
-	      size_t * to);
+	      size_t * to,
+	      size_t * best);
 
 int main(int argc, char ** argv)
 {
-  size_t use_log, from, to;
-  int status = read_args(argc,argv,&use_log,&from,&to);
+  size_t use_log, from, to, best;
+  int status = read_args(argc,argv,&use_log,&from,&to,&best);
   if (status == -1) exit (EXIT_FAILURE);
 
   int nb;
@@ -89,7 +90,8 @@ int main(int argc, char ** argv)
     gsl_histogram_mul(hist,hist);
     double p_hat_square = gsl_histogram_sum(hist);
     double j_score = (2.0-(n+1.0)*p_hat_square)*m/(n-1.0);
-    fprintf(stdout,"%d %g\n",(int) m, j_score);
+    if (best==0)
+      fprintf(stdout,"%d %g\n",(int) m, j_score);
     if (m == from) {
       mbest=m;
       jbest=j_score;
@@ -101,7 +103,11 @@ int main(int argc, char ** argv)
     }
     gsl_histogram_free(hist);
   }
-  fprintf(stdout,"\n");
+  if (best==0) {
+    fprintf(stdout,"\n");
+  } else {
+    fprintf(stdout,"%d\n",(int) mbest);
+  }
   fprintf(stderr,"The best number of bins is: %d giving a score of %g\n",(int) mbest,jbest);
   return 0;
 }
@@ -109,16 +115,18 @@ int main(int argc, char ** argv)
 int read_args(int argc, char ** argv,
 	      size_t * use_log,
 	      size_t * from,
-	      size_t * to)
+	      size_t * to,
+	      size_t * best)
 {
   static char usage[] = \
     "usage: %s [-l --log] [-f --from=integer]\n"
-    "          [-t --to=integer] [-h --help]\n\n"
+    "          [-t --to=integer] [-b --best] [-h --help]\n\n"
     "  -l --log: should the log of the observations be used?\n"
     "  -f --from <positive integer>: the smallest number of bins to explore\n"
     "     (default set to 2).\n"
     "  -t --to <positive integer>: the largest number of bins to explore\n"
     "     (default set to the number of observations divided by 5).\n"
+    "  -b --best: should only the best number of bins be printed to the 'stdout'?\n"
     "  -h --help: prints this message.\n"
     " The program reads data from the 'stdin' (in text format),\n"
     " the first line should contain the number of observations (integer)\n"
@@ -132,24 +140,29 @@ int read_args(int argc, char ** argv,
     " bins and where the summation is done over the bins. The best number\n"
     " of bins is the one giving the smallest score.\n"
     " The program prints to the 'stdout' the number of bins and the\n"
-    " corresponding cross-validation scores on two columns.\n\n";
+    " corresponding cross-validation scores on two columns (default)\n"
+    "  or only the best number of bins if 'best' is used as an argument.\n\n";
   // Define default values
   *use_log=0;
   *from=2;
   *to=1;
+  *best=0;
   {int opt;
     static struct option long_options[] = {
       {"log",no_argument,NULL,'l'},
+      {"best",no_argument,NULL,'b'},
       {"from",optional_argument,NULL,'f'},
       {"to",optional_argument,NULL,'t'},
       {"help",no_argument,NULL,'h'},
       {NULL,0,NULL,0}
     };
     int long_index =0;
-    while ((opt = getopt_long(argc,argv,"lhf:t:",long_options,\
+    while ((opt = getopt_long(argc,argv,"lbhf:t:",long_options,\
 			      &long_index)) != -1) {
       switch(opt) {
       case 'l': *use_log=1;
+	break;
+      case 'b': *best=1;
 	break;
       case 'f': *from = (size_t) atoi(optarg);
 	break;

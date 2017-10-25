@@ -19,12 +19,19 @@
 <li><a href="#basic-statistics">4.2. Basic statistics</a></li>
 <li><a href="#basic-plots">4.3. Basic plots</a>
 <ul>
-<li><a href="#orgfa3305b">4.3.1. Raster plot</a></li>
-<li><a href="#org36dd715">4.3.2. A fancy trick</a></li>
-<li><a href="#org6f898f0">4.3.3. Counting process plots</a></li>
-<li><a href="#org6619740">4.3.4. Lagged ranked ISI plot</a></li>
+<li><a href="#org7e606ea">4.3.1. Raster plot</a></li>
+<li><a href="#org0174e70">4.3.2. A fancy trick</a></li>
+<li><a href="#org3574d03">4.3.3. Counting process plots</a></li>
+<li><a href="#orga5646da">4.3.4. Lagged ranked ISI plot</a></li>
 </ul>
 </li>
+<li><a href="#org890c8ed">4.4. Histograms</a>
+<ul>
+<li><a href="#org2506a23">4.4.1. Getting the cross validation score</a></li>
+<li><a href="#org26881d6">4.4.2. Building the histogram</a></li>
+</ul>
+</li>
+<li><a href="#orgd170863">4.5. ISI histograms of the seven "good" neuron of dataset <code>locust20010214</code></a></li>
 </ul>
 </li>
 </ul>
@@ -371,7 +378,7 @@ This file contains the responses to 25 stimulations with `cis-3-hexen-1-ol`. The
     lag of isi i.
 
 
-<a id="orgfa3305b"></a>
+<a id="org7e606ea"></a>
 
 ### Raster plot
 
@@ -403,7 +410,7 @@ Here instead of the "new window output" we generated at text output (that's what
 ![img](fig/locust20010214_C3H_1_tetB_u1_raster.png)
 
 
-<a id="org36dd715"></a>
+<a id="org0174e70"></a>
 
 ### A fancy trick
 
@@ -414,7 +421,7 @@ We can also make the raster plot and get the basic stats printed at once with th
     ./aspa_mst_fns
 
 
-<a id="org6f898f0"></a>
+<a id="org3574d03"></a>
 
 ### Counting process plots
 
@@ -481,7 +488,7 @@ Then within `gnuplot`:
 ![img](fig/locust20010214_C3H_1_tetB_u1_cp_norm_wt.png)
 
 
-<a id="org6619740"></a>
+<a id="orga5646da"></a>
 
 ### Lagged ranked ISI plot
 
@@ -492,4 +499,234 @@ Coming back to the spontaneous data, a good graphical way to look for correlatio
 We then obtain a graph looking like:
 
 ![img](fig/locust20010214_Spontaneous_1_tetB_u1_lrank.png)
+
+
+<a id="org890c8ed"></a>
+
+## Histograms
+
+A cross-validation based binwidth selection is implemented in `aspa`. It follows Mats Rudemo "Empirical Choice of Histograms and Kernel Density Estimators" (*Scandinavian Journal of Statistics* **9**:65-78, 1982) approach. In short given a sample of inter spike intervals (ISI), a cross validation score approximating the integrated mean squared error (between the estimated density and the true one) is computed for a sequence of binwidths (or equivalently number of bins). This curve score vs number of bins can be plotted and the the "best" choice is the number of bins minimizing it. An example follows in the next sub-section.
+
+
+<a id="org2506a23"></a>
+
+### Getting the cross validation score
+
+We first get the ISI sample using function `aspa_mst_isi` whose description is:
+
+    ./aspa_mst_isi --help
+
+    usage: ./aspa_mst_isi [-b --bin] [-h --help]
+    
+      -b --bin: the data read from the 'stdin' are in binary format.
+      -h --help: prints this message.
+     The program reads data from the 'stdin' (default in text format)
+     most likely resulting from a call to 'aspa_read_spike_train',
+     gets the inter spike intervals and writes the number of ISIs
+     followed by the individual ISIs (one per line) to the stdout
+
+We use it as follows, storing the obtained ISI sample in a file named `u1isi1.txt`:
+
+    ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+    			locust20010214_Spontaneous_1_tetB_u1.txt | \
+        ./aspa_mst_isi > u1isi1.txt
+
+We can check the head of the generated file with `head`:
+
+    head u1isi1.txt
+
+    3303
+    3.03414
+    0.04354
+    0.03056
+    0.0255599
+    0.02651
+    0.0622902
+    0.13791
+    0.11336
+    1.01958
+
+We use next function `aspa_hist_bw` whose description is:
+
+    ./aspa_hist_bw --help
+
+    usage: ./aspa_hist_bw [-l --log] [-f --from=integer]
+              [-t --to=integer] [-b --best] [-h --help]
+    
+      -l --log: should the log of the observations be used?
+      -f --from <positive integer>: the smallest number of bins to explore
+         (default set to 2).
+      -t --to <positive integer>: the largest number of bins to explore
+         (default set to the number of observations divided by 5).
+      -b --best: should only the best number of bins be printed to the 'stdout'?
+      -h --help: prints this message.
+     The program reads data from the 'stdin' (in text format),
+     the first line should contain the number of observations (integer)
+     the following lines should contain the observations, one per line
+     in decimal notation. If a log transformed of the data is requested
+     it is applied first. Then a sequence of histograms with number of
+     bins variying between from and to (inclusive) is contructed. For each
+     histogram, the empirical bin probability (bin count divided by sample
+     size), p_hat_i for each bin i is obtained and the score is computed as
+     follows: (2-(n+1) * sum(p_hat_i^2))*m/(n-1) where m is the number of
+     bins and where the summation is done over the bins. The best number
+     of bins is the one giving the smallest score.
+     The program prints to the 'stdout' the number of bins and the
+     corresponding cross-validation scores on two columns (default)
+      or only the best number of bins if 'best' is used as an argument.
+
+On the ISI sample we just got that gives (using the log of the observations to limit the consequences of the skewness of the distribution):
+
+    ./aspa_hist_bw --log < u1isi1.txt > u1bw1.txt
+
+    Sample size: 3303
+    Exploring now number of bins between 2 and 330.
+    Using a log transformation of the data.
+    Histograms will be built between -4.15413 and 1.50993.
+    The best number of bins is: 46 giving a score of -2.07509
+
+Using `gnuplot` we quickly visualize the curve:
+
+    set grid
+    unset key
+    set xlabel 'Number of bins'
+    set ylabel 'Cross validation score'
+    plot 'u1bw1.txt' using 1:2 with lines lc 'black'\
+         linewidth 2
+
+![img](fig/locust20010214_Spontaneous_1_tetB_u1_bw.png)
+
+
+<a id="org26881d6"></a>
+
+### Building the histogram
+
+Once the "best" number of bins is known (or at least one has decided on the number of bins to use), we call `aspa_hist` to construct the histogram. Its description is:
+
+    ./aspa_hist --help
+
+    usage: ./aspa_hist -n --n_bins=integer [-l --log] 
+              [-p --prob] [-h --help]
+    
+      -n --n_bins <positive integer>: the number of bins to use.
+      -l --log: should the log of the observations be used?
+      -p --prob: should the result be normalized so that the
+         the histogram integral is one?
+      -h --help: prints this message.
+     The program reads data from the 'stdin' (in text format),
+     the first line should contain the number of observations (integer)
+     the following lines should contain the observations, one per line
+     in decimal notation. If a log transformed of the data is requested
+     it is applied first. Then a histogram with 'n_bins' bins is contructed.
+     If a log transformation was used, the bins boundaries are transformed
+     back to the original scale. If argument 'prob' is specified, the histogram
+     is normalized such that its integral is one (it becomes of proper PDF
+     estimator), otherwise the bin counts are kept.
+     The program prints to the 'stdout' on 3 columns: the left bin boundary;
+     the right bin boundary; the bin count or bin frequency (depending on the
+     specification of argument 'prob').
+
+Using the previous ISI sample and the best number of bins we construct the histogram and save it in file `u1hist1.txt` with:
+
+    ./aspa_hist -n 46 -p --log < u1isi1.txt > u1hist1.txt
+
+    Sample size: 3303
+    Using a log transformation of the data.
+
+The plot of the histogram with `gnuplot` is then done as follows:
+
+    set grid
+    unset key
+    set title 'ISI density estimate neuron 1 spont. 1'
+    set xlabel 'Inter spike interval (s)'
+    set ylabel 'Estimated density (1/s)'
+    plot [0:0.5] [] 'u1hist1.txt' using 1:3 with steps lc 'black'\
+         linewidth 2
+
+![img](fig/locust20010214_Spontaneous_1_tetB_u1_isi_hist.png)
+
+
+<a id="orgd170863"></a>
+
+## ISI histograms of the seven "good" neuron of dataset `locust20010214`
+
+We can proceed and compute the ISI histograms of the 6 other good neurons of the experiment. We start by downloading the data with:
+
+    prefix=https://raw.githubusercontent.com/christophe-pouzat/zenodo-locust-datasets-analysis
+    prefix="$prefix"/master/Locust_Analysis_with_R/locust20010214/locust20010214_spike_trains/
+    prefix="$prefix"locust20010214_Spontaneous_1_tetB_u
+    for i in {2..7} ; do
+        wget "$prefix"$i".txt"
+    done
+
+We now get the ISIs stored in files names `uXisi1.txt` where `X` takes successively values 2 to 7:
+
+    file_name=locust20010214_Spontaneous_1_tetB_u
+    for i in {2..7} ; do
+        ./aspa_read_spike_train --inter_trial_interval=30 --trial_duration=29 < \
+    			"$file_name"$i".txt" | \
+    	./aspa_mst_isi > "u"$i"isi1.txt"
+    done
+
+We check if some ISI values are null:
+
+    for i in {1..7} ; do
+        in="u"$i"isi1.txt"
+        sed -n '2,$p' < $in > dump
+        echo "Unit" $i "has" $(grep "0$" < dump | wc -l) \
+    	 "ISIs equal to zero among" $(($(wc -l < $in) - 1))
+    done
+
+    Unit 1 has 0 ISIs equal to zero among 3303
+    Unit 2 has 0 ISIs equal to zero among 3574
+    Unit 3 has 0 ISIs equal to zero among 1339
+    Unit 4 has 0 ISIs equal to zero among 1890
+    Unit 5 has 4 ISIs equal to zero among 4912
+    Unit 6 has 0 ISIs equal to zero among 909
+    Unit 7 has 1 ISIs equal to zero among 4155
+
+Since these null ISIs are always making less than a thousands of the sample size, we remove them. We just have to be careful since the first line of the ISI files contains the number of events. It should therefore be changed if we remove lines:
+
+    for i in {1..7} ; do
+        # in contains input file name
+        in="u"$i"isi1.txt"
+        # remove first line of in and save result in dump
+        sed -n '2,$p' < $in > dump
+        # check how many lines with just 0 dump contains
+        zero=$(grep "0$" < dump | wc -l)
+        if [[ $zero != 0 ]] ; then
+           # if there are lines with just zero remove them
+           sed -i "/0$/d" $in
+           # compute the new number of events in two steps
+           original=$(sed -n '1p' < $in)
+           new=$(($original - $zero))
+           # update the number of events
+           sed -i "1s/.*/$new/" $in
+        fi
+    done
+
+We can then construct the ISI histograms (output not shown):
+
+    for i in {1..7} ; do
+        in="u"$i"isi1.txt"
+        out="u"$i"_isi_dens1.txt"
+        n=$(./aspa_hist_bw --best --log < $in)
+        ./aspa_hist --n_bins=$n --log --prob < $in > $out
+    done
+
+We can now make a graph with all the estimated ISI densities as follows:
+
+    set grid
+    set title 'ISI density estimate for neurons 1 to 7 spont. 1'
+    set xlabel 'Inter spike interval (s)'
+    set ylabel 'Estimated density (1/s)'
+    plot [0:0.5] [0:20] 'u1_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+         'u2_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+         'u3_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+         'u4_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+         'u5_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+         'u6_isi_dens1.txt' using 1:3 with steps linewidth 2,\
+         'u7_isi_dens1.txt' using 1:3 with steps linewidth 2
+
+![img](fig/locust20010214_Spontaneous_1_tetB_u1_7_isi_dens.png)
 
